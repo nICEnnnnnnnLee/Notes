@@ -1,0 +1,78 @@
+第一步：请先在右侧的资源管理器，引用 那里，添加.Net引用，System.Management，这一步是必须的，否则会提示类有错误，很多新手在百度或者其它网站上查找的资料，忽略了这一步无法成功，以为是代码错误，引用System.Management之后，基本上网上的代码都差不多一样，都可以使用的。。
+第二步：然后在程序中 using System.Management;
+再使用下面的方法，即可。
+以下是我自己项目中使用的代码，肯定可以使用。如果有错误，说明上面两步未操作成功。
+        /// <summary>
+        /// 取得设备网卡的MAC地址
+        /// </summary>
+        public static string GetNetCardMacAddress()
+        {
+            ManagementClass mc = new ManagementClass("Win32_NetworkAdapterConfiguration");
+            ManagementObjectCollection moc = mc.GetInstances();
+            string str = "";
+            foreach (ManagementObject mo in moc)
+            {
+                if ((bool)mo["IPEnabled"] == true)
+                    str = mo["MacAddress"].ToString();
+            }
+            return str;
+        }
+        /// <summary>
+        /// 取得CPUID
+        /// </summary>
+        public static string cpuidstr()
+        {
+            ManagementClass mc = new ManagementClass("Win32_Processor");
+            ManagementObjectCollection moc = mc.GetInstances();
+            string strID = null;
+            foreach (ManagementObject mo in moc)
+            {
+                strID = mo.Properties["ProcessorId"].Value.ToString();
+                break;
+            }
+            return strID;
+        }
+        /// <summary>
+        /// 获得盘符为drvID的硬盘序列号，缺省为C
+        /// </summary>
+        /// <param name="drvID"></param>
+        public static string HDVal(string drvID)
+        {
+            const int MAX_FILENAME_LEN = 256;
+            int retVal = 0;
+            int a = 0;
+            int b = 0;
+            string str1 = null;
+            string str2 = null;
+            int i = GetVolumeInformation(
+            drvID + @":\",
+            str1,
+            MAX_FILENAME_LEN,
+            ref retVal,
+            a,
+            b,
+            str2,
+            MAX_FILENAME_LEN
+            );
+            return retVal.ToString();
+        }
+        public static string HDVal()
+        {
+            const int MAX_FILENAME_LEN = 256;
+            int retVal = 0;
+            int a = 0;
+            int b = 0;
+            string str1 = null;
+            string str2 = null;
+            int i = GetVolumeInformation(
+            "c:\\",
+            str1,
+            MAX_FILENAME_LEN,
+            ref retVal,
+            a,
+            b,
+            str2,
+            MAX_FILENAME_LEN
+            );
+            return retVal.ToString();
+        }

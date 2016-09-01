@@ -1,0 +1,127 @@
+http://blog.csdn.net/waxic/article/details/1326234
+
+C#定义了一个类System.Windows.Forms.Clipboard来简化剪切板操作，这个类有一个静态方法，主要有：
+
+Clear 清除剪切板中的所有数据；
+ContainsData，ContainsAudio，ContainsFlieDropList，ContainsText，ContainsImage，用于检查剪切板中是否存在相应的数据；
+GetAudioStream，GetDataObject，GetText，GetImage，GetFileDropList，用于取得数据；
+SetAudio，SetDataObject，SetText，SetImage，SetFileDropList，用于添加数据；
+
+以下是检测剪切板的方法：
+
+一、引入
+
+要使用剪切板首先要引入三个函数，
+        [System.Runtime.InteropServices.DllImport("user32")]
+        private static extern IntPtr SetClipboardViewer(IntPtr hwnd);
+        [System.Runtime.InteropServices.DllImport("user32")]
+        private static extern IntPtr ChangeClipboardChain(IntPtr hwnd,IntPtr hWndNext);
+        [System.Runtime.InteropServices.DllImport("user32")]
+        private static extern int SendMessage(IntPtr hwnd,int wMsg,IntPtr wParam,IntPtr lParam);
+
+        const int WM_DRAWCLIPBOARD = 0x308;
+        const int WM_CHANGECBCHAIN = 0x30D;
+
+IntPtr SetClipboardViewer(IntPtr hwnd) 用于往观察链中添加一个窗口句柄，这个窗口就可成为观察链中的一员了，返回值指向下一个观察者。
+IntPtr ChangeClipboardChain(IntPtr hwnd,IntPtr hWndNext); 删除由hwnd指定的观察链成员，这是一个窗口句柄，第二个参数hWndNext是观察链中下一个窗口的句柄
+int SendMessage(IntPtr hwnd,int wMsg,IntPtr wParam,IntPtr lParam); 发送消息
+
+二、使用
+定义完成之后，可以分三部来使用，第一步把自己的窗口添加到观察链中成为观察者，并保存下一个观察者的句柄；第二步监视剪切板，并把剪切板变化的消息发送给下一个观察者；第三步撤消自己定义的观察者，并通知下一个观察者。
+
+第一步：把自己的窗口添加到观察链中成为观察者，并保存下一个观察者的句柄；
+//存放观察链中下一个窗口句柄    
+IntPtr NextClipHwnd;
+
+private void Form1_Load(object sender, System.EventArgs e)
+{   
+     //获得观察链中下一个窗口句柄
+    NextClipHwnd=SetClipboardViewer(this.Handle);            
+ }
+
+第二步：监视剪切板，并把剪切板变化的消息发送给下一个观察者，这里需要重载WndProc方法；
+这里用到两个消息常量：
+  const int WM_DRAWCLIPBOARD = 0x308;
+  const int WM_CHANGECBCHAIN = 0x30D;
+
+protected override void WndProc(ref System.Windows.Forms.Message m)
+{
+    switch(m.Msg)
+    {
+        case WM_DRAWCLIPBOARD:
+            //将WM_DRAWCLIPBOARD消息传递到下一个观察链中的窗口
+            SendMessage(NextClipHwnd,m.Msg,m.WParam,m.LParam);
+            IDataObject iData = Clipboard.GetDataObject();  
+              //检测文本
+            if(iData.GetDataPresent(DataFormats.Text)|iData.GetDataPresent(DataFormats.OemText)) 
+            {
+                     this.richTextBox1.Text=(String)iData.GetData(DataFormats.Text); 
+            }
+             //检测图像
+             if (iData.GetDataPresent(DataFormats.Bitmap))
+              {
+                        pictureBox1.Image=Clipboard.GetImage();
+                        NewClipData();
+              }
+              //检测自定义类型
+               if (iData.GetDataPresent("myFormat"))
+                {
+                        MyObj myobj=(MyObj)iData.GetData("myFormat");
+                        this.richTextBox1.Text=myobj.ObjName;
+                }
+              break;
+        default:
+            base.WndProc(ref m);
+            break;
+    }        
+}
+
+第三步：撤消自己定义的观察者，并通知下一个观察者。
+private void Form1_Closed(object sender, System.EventArgs e)
+{
+            //从观察链中删除本观察窗口（第一个参数：将要删除的窗口的句柄；第二个参数：//观察链中下一个窗口的句柄 ）
+           ChangeClipboardChain(this.Handle,NextClipHwnd);
+            //将变动消息WM_CHANGECBCHAIN消息传递到下一个观察链中的窗口 
+            SendMessage(NextClipHwnd,WM_CHANGECBCHAIN,this.Handle,NextClipHwnd);  
+}
+
+三、扩展
+DataFormats类定义了剪切板内容的几种格式，包括Text，UnicodeText，OemText，Rtf，Html，Dib，Bitmap等，但自己可以定义新的数据格式，代码如下 ：
+    //新类
+    public class MyObj
+    {
+        private string objName;
+        public MyObj()
+        {
+            objName = "自定义剪切板内容";
+        }
+        public string ObjName
+        {
+            get { return objName; }
+        }
+    }
+
+        //往剪切板中添加一个自定义内容
+        private void NewClipData()
+        {
+            DataFormats.Format myFormat = DataFormats.GetFormat("myFormat");
+            MyObj myobj = new MyObj();
+            DataObject myDataObject = new DataObject("myFormat", myobj);
+            Clipboard.SetDataObject(myDataObject);
+        }
+其中myFormat就是自定义数据格式的名称，
+在上面的WinProc中可以看到
+             //检测图像
+             if (iData.GetDataPresent(DataFormats.Bitmap))
+              {
+                        pictureBox1.Image=Clipboard.GetImage();
+                        NewClipData();
+              }
+
+检测到剪切板中有图像内容时，就显示这个图像，然后，调用NewClipData()，产生一个新剪切板数据，其格式是自定义的myFormat，这时，程序会通过下面这段代码来检测到这个变化，并处理
+              //检测自定义类型
+               if (iData.GetDataPresent("myFormat"))
+                {
+                        MyObj myobj=(MyObj)iData.GetData("myFormat");
+                        this.richTextBox1.Text=myobj.ObjName;
+                }

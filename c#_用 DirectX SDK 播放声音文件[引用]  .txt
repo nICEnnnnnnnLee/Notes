@@ -1,0 +1,107 @@
+ 准备工作：
+
+1.安装了DirectX SDK(有9个DLL文件).这里我们只用到MicroSoft.DirectX.dll 和 Microsoft.Directx.DirectSound.dll
+
+2.一个WAV文件.(这样的文件比较好找,在QQ的目录里就不少? Ｕ饫锞筒欢嗨盗?)名字叫SND.WAV,放在最后目标程序的同个目录下面
+
+    开始写程序啦.随便用个UltraEdit就好了.
+
+1.引入DirectX 的DLL文件的名字空间：
+
+using Microsoft.DirectX;
+
+using Microsoft.DirectX.DirectSound;
+
+2.建立设备.在我们导入的Microsoft.DirectX.DirectSound空间中,有个Device的类.这个是表示系统中的声音设备.
+
+Device dv=new Device( );
+
+3.设置CooperativeLevel.因为windows是多任务的系统,设备不是独占的,所以在使用设备前要为这个设备设置CooperativeLevel.调用Device的SetCooperativeLevel方法：其中,第一个参数是一个Control,第二个参数是个枚举类型.
+
+    在这个程序中,Control我随便弄了个参数塞进去(很汗吧??如果在windows程序中,可以用this代替.第二个参数就是优先级别,这里表示优先播放.
+
+dv.SetCooperativeLevel( ( new UF( ) ),CooperativeLevel.Priority );
+
+4.开辟缓冲区.对于上面的声音设备,他有个自己的缓冲区,叫主缓冲区.系统中,一个设备有唯一的主缓冲区.由于windows是多任务(又是这个??所以可以有几个程序同时利用一个设备播放声音,所以每个程序都自己开辟一个二级缓冲区,放自己的声音.
+
+    系统根据各个程序的优先级别,按照相应的顺序分别去各个二级缓冲区中读取内容到主缓冲区中播放.这里,我们为SND.WAV开辟一个缓冲区.
+
+    其中,第一个参数表示文件名(傻瓜都看出来了??第二个就是需要使用的设备.
+
+SecondaryBuffer buf=new SecondaryBuffer( @"snd.wav",dv );
+
+5.接下来就可以播放啦.第一个参数表示优先级别,0是最低的.第2个参数是播放方式,这里是循环播放.
+
+buf.Play( 0,BufferPlayFlags.Looping );
+
+6.由于命令行程序没有消息循环,执行完代码就退出了,所以,我们需要暂停程序.
+
+Console.Read( );
+
+7.关键的部分已经完了,这里只是交代一下刚才的那个倒霉的new UF( ) 是什么东西.这个完全是为了应付SetCooperativeLevel的参数要求.我不知道这样做有什么附作用(各位如果因此把声卡烧了…………)
+
+class UF:Form{}
+
+8.代码写完啦~~~.下面可以编译了,这里编译比较复杂点.
+
+csc /r:directX\MicroSoft.DirectX.dll;directX\Microsoft.Directx.DirectSound.dll dxsnd.cs
+
+    这里,我把2个DLL文件放在当前目录的directx目录下(这个是我自己建的,你只需要指出这2个文件的位置就可以了.)
+
+    顺便把我的目录结构说明一下：
+
+|
+
+|--dxsnd.cs
+
+|--snd.wav
+
+|--<directx>
+
+|
+
+|--MicroSoft.DirectX.dll
+
+|--Microsoft.Directx.dll
+
+    下面是完整代码：
+
+//dxsnd.cs
+
+using System;
+
+using Microsoft.DirectX;
+
+using Microsoft.DirectX.DirectSound;
+
+using System.Windows.Forms;
+
+namespace test1
+
+{
+
+    class test
+
+    {
+
+        public static void Main( string [] args )
+
+        {
+
+            Device dv=new Device( );
+
+            dv.SetCooperativeLevel( ( new UF( ) ),CooperativeLevel.Priority );
+
+            SecondaryBuffer buf=new SecondaryBuffer( @"snd.wav",dv );
+
+            buf.Play( 0,BufferPlayFlags.Looping );
+
+            Console.ReadLine( );
+
+        }
+
+        class UF:Form{}
+
+    }
+
+}

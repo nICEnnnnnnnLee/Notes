@@ -1,0 +1,5 @@
+Bitmap _Bitmap = new Bitmap(32, 32);
+            Graphics _Graphics = Graphics.FromImage(_Bitmap);
+            _Graphics.DrawString("L", new System.Drawing.Font("ºÚÌå", 20), Brushes.Red, new Point(0,0));
+            _Graphics.Dispose();
+            this.Icon = Icon.FromHandle(_Bitmap.GetHicon());

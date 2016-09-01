@@ -1,0 +1,39 @@
+http://blog.csdn.net/iloli/article/details/10328163
+
+C#TextBox控件拖拽实现获得文件路径
+
+步骤:
+
+1、 通过DragEnter事件获得被拖入窗口的“信息”(可以是若干文件，一些文字等等)，在DragDrop事件中对“信息”进行解析。
+2、接受拖放控件的AllowDrop属性必须设置成true;
+3、必须在DragEnter事件中设置好要接受拖放的效果，默认为无效果。(所以单独写DragDrop事件是不会具有拖拽功能的)
+       C#TextBox控件拖拽实现获得文件路径
+
+步骤:
+
+1、 通过DragEnter事件获得被拖入窗口的“信息”(可以是若干文件，一些文字等等)，在DragDrop事件中对“信息”进行解析。
+2、接受拖放控件的AllowDrop属性必须设置成true;
+3、必须在DragEnter事件中设置好要接受拖放的效果，默认为无效果。(所以单独写DragDrop事件是不会具有拖拽功能的)
+        private void textBox1_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effect = DragDropEffects.Link;
+                this.textBox1.Cursor = System.Windows.Forms.Cursors.Arrow;  //指定鼠标形状（更好看）
+            }
+            else
+            {
+                e.Effect = DragDropEffects.None;
+            }
+
+
+        }
+
+	private void textBox1_DragDrop(object sender, DragEventArgs e)
+        {
+            //GetValue(0) 为第1个文件全路径
+<span style="white-space:pre">	</span> &nbsp; &nbsp;//DataFormats 数据的格式，下有多个静态属性都为string型，除FileDrop格式外还有Bitmap,Text,WaveAudio等格式
+            string path = ((System.Array)e.Data.GetData(DataFormats.FileDrop)).GetValue(0).ToString();
+            textBox1.Text = path;
+            this.textBox1.Cursor = System.Windows.Forms.Cursors.IBeam; //还原鼠标形状
+        }

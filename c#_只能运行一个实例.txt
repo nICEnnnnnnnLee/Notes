@@ -1,0 +1,22 @@
+#region   只运行一个实例
+        public static Process RunningInstance()
+        {
+            Process current = Process.GetCurrentProcess();//当前新启动的线程
+            Process[] processes = Process.GetProcessesByName(current.ProcessName);
+            //遍历与当前进程名称相同的进程列表
+            foreach (Process process in processes)
+            {
+                //process,原来旧的线程与当前新启动的线程ID不一样
+                //Ignore the current process
+                if (process.Id != current.Id)
+                {
+                    //Make sure that the process is running from the exe file.
+                    if (process.MainModule.FileName == current.MainModule.FileName)
+                    {
+                        //Return the other process instance.
+                        return process;//返回原来旧线程的窗体
+                    }
+                }
+            }
+            return null;
+        }

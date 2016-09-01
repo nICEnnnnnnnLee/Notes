@@ -1,0 +1,51 @@
+未处理 System.UnauthorizedAccessException
+  Message=无法写入到注册表项。
+  Source=mscorlib
+  StackTrace:
+       在 System.ThrowHelper.ThrowUnauthorizedAccessException(ExceptionResource resource)
+       在 Microsoft.Win32.RegistryKey.EnsureWriteable()
+       在 Microsoft.Win32.RegistryKey.SetValue(String name, Object value, RegistryValueKind valueKind)
+       在 Microsoft.Win32.RegistryKey.SetValue(String name, Object value)
+       在 KeyHidden.Program.Main() 位置 D:\102604\c#工程目录\helloworld\KeyHidden\KeyHidden\Program.cs:行号 32
+  InnerException: 
+
+
+public void SetAutoRun(string fileName, bool isAutoRun)  
+{  
+    RegistryKey reg = null;  
+    try  
+    {  
+        if (!System.IO.File.Exists(fileName))  
+            throw new Exception("该文件不存在!");  
+        String name = fileName.Substring(fileName.LastIndexOf(@"\") + 1);  
+        reg = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);  
+        if (reg == null)  
+            reg = Registry.LocalMachine.CreateSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run");  
+        if (isAutoRun)  
+            reg.SetValue(name, fileName);  
+        else  
+            reg.SetValue(name, false);  
+        lbl_autorunerr.Visible = false;  
+    }  
+    catch  
+    {  
+        lbl_autorunerr.Visible = true;  
+        //throw new Exception(ex.ToString());  
+    }  
+    finally  
+    {  
+        if (reg != null)  
+            reg.Close();  
+    }  
+}
+ 
+
+使用的时候，直接调用SetAutoRun函数即可，这里解释一下两个参数的含义：
+
+fileName：需要设置自动启动程序的路径，若为当前程序可直接传递Application.ExecutablePath。
+
+isAutoRun：是否自动运行，为false时，取消自动运行。
+
+例：  SetAutoRun(Application.ExecutablePath, true);  //设置自动启动当前程序
+
+      SetAutoRun(Application.ExecutablePath, false);  //取消自动启动

@@ -1,0 +1,130 @@
+http://dev.yesky.com/msdn/284/3498784.shtml
+http://blog.csdn.net/s4gg/article/details/2974812
+
+
+
+
+1.首先引入System.Runtime.InteropServices 
+
+using System.Runtime.InteropServices;
+
+　　2.在类内部声明两个API函数,它们的位置和类的成员变量等同.
+
+[System.Runtime.InteropServices.DllImport("user32.dll")] //申明API函数 
+public static extern bool RegisterHotKey(
+IntPtr hWnd, // handle to window 
+int id, // hot key identifier 
+uint fsModifiers, // key-modifier options 
+Keys vk // virtual-key code 
+); 
+
+[System.Runtime.InteropServices.DllImport("user32.dll")] //申明API函数 
+public static extern bool UnregisterHotKey(
+IntPtr hWnd, // handle to window 
+int id // hot key identifier 
+);
+
+　　3.定义一个KeyModifiers的枚举,以便出现组合键
+
+public enum KeyModifiers
+{
+　None = 0,
+　Alt = 1,
+　Control = 2,
+　Shift = 4,
+　Windows = 8
+}
+
+　　4.在类的构造函数出注册系统热键
+
+　　示例,下例注册了四个热键:
+
+public MainForm()
+{
+　InitializeComponent(); 
+
+　RegisterHotKey(Handle, 100, 2, Keys.Left); // 热键一:Control +光标左箭头
+　RegisterHotKey(Handle, 200, 2, Keys.Right); / /热键一:Control +光标右箭头
+　RegisterHotKey(Handle, 300, 2, Keys.Up); // 热键一:Control +光标上箭头
+　RegisterHotKey(Handle, 400, 2, Keys.Down); // 热键一:Control +光标下箭头
+
+　....; 
+}
+
+　　5.重写WndProc()方法，通过监视系统消息，来调用过程
+
+　　示例:
+
+protected override void WndProc(ref Message m)//监视Windows消息 
+{ 
+　const int WM_HOTKEY = 0x0312; //如果m.Msg的值为0x0312那么表示用户按下了热键 
+　switch (m.Msg) 
+　{ 
+　　case WM_HOTKEY: 
+　　ProcessHotkey(m); //按下热键时调用ProcessHotkey()函数
+　　break; 
+　} 
+　base.WndProc(ref m); //将系统消息传递自父类的WndProc 
+}
+
+protected override void WndProc(ref Message m)
+{
+     base.WndProc(ref m);
+     switch(m.Msg)
+     {
+         case WM_HOTKEY: //窗口消息-热键
+             switch(m.WParam.ToInt32())
+             {
+                 case 32: //热键ID
+                     MessageBox.Show("Hot Key : Ctrl + Alt + Shift + Space");
+                 break;
+                 default:
+                 break;
+             }
+         break;
+         case WM_CREATE: //窗口消息-创建
+             RegKey(Handle,Space,MOD_ALT | MOD_CONTROL | MOD_SHIFT,VK_SPACE); //注册热键
+         break;
+         case WM_DESTROY: //窗口消息-销毁
+             UnRegKey(Handle,Space); //销毁热键
+         break;
+         default:
+         break;
+     }
+}
+
+　　5.不用说,我们接下来需要实现ProcessHotkey函数:
+
+//按下设定的键时调用该函数 
+
+private void ProcessHotkey(Message m) 
+{
+　IntPtr id = m.WParam; //IntPtr用于表示指针或句柄的平台特定类型 
+　//MessageBox.Show(id.ToString()); 
+　string sid = id.ToString(); 
+　switch (sid)
+　{
+　　case "100": DecreseVolumnb(); break; // 按下Control +光标左箭头,调用函数DecreseVolumnb(); 
+　　case "200": AddVolumnb(); break; // 按下Control +光标右箭头,调用函数AddVolumnb()
+　　case "300":// 按下Control +光标上箭头,显示窗体
+　　　this.Visible = true; 
+　　　break; 
+　　case "400":// 按下Control +光标下箭头,隐藏窗体
+　　　this.Visible = false; 
+　　　break; 
+　} 
+}
+
+　　很明显接下来分别实现函数DecreseVolumnb(); 和AddVolumnb(); 即可.
+
+　　6.最后别忘了在程序退出时取消热键的注册
+
+private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+{
+　UnregisterHotKey(Handle, 100); //卸载第1个快捷键 
+　UnregisterHotKey(Handle, 200); //缷载第2个快捷键
+　UnregisterHotKey(Handle, 300); //卸载第3个快捷键 
+　UnregisterHotKey(Handle, 400); //缷载第4个快捷键
+}
+
+　　以上就是在C#程序中使用系统热键的整个过程。

@@ -1,0 +1,31 @@
+C# 发送邮件代码备忘
+
+this.txtTo.Text 发送给谁
+
+this.txtFrom.Text 来自谁
+
+this.txtTitle.Text 邮件标题
+
+this.txtContent.Text 邮件内容
+
+this.txtPassword.Text 发送者邮箱密码
+
+代码如下：
+
+MailMessage mailMessage = new MailMessage();
+mailMessage.To.Add(this.txtTo.Text);
+mailMessage.From = new System.Net.Mail.MailAddress(this.txtFrom.Text);
+mailMessage.Subject = this.txtTitle.Text;
+mailMessage.Body = this.txtContent.Text;
+mailMessage.IsBodyHtml = true;
+mailMessage.BodyEncoding = System.Text.Encoding.UTF8;
+mailMessage.Priority = System.Net.Mail.MailPriority.Normal;
+ 
+SmtpClient smtpClient = new SmtpClient();
+smtpClient.Credentials = new System.Net.NetworkCredential(mailMessage.From.Address, this.txtPassword.Text);
+smtpClient.DeliveryMethod = System.Net.Mail.SmtpDeliveryMethod.Network;
+smtpClient.Host = "smtp." + mailMessage.From.Host;
+smtpClient.Port = 25;
+smtpClient.Timeout = 3000;
+smtpClient.EnableSsl = false;
+smtpClient.Send(mailMessage);

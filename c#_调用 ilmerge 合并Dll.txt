@@ -1,0 +1,15 @@
+http://blog.csdn.net/educast/article/details/5274691
+
+下载地址:http://www.microsoft.com/downloads/details.aspx?familyid=22914587-b4ad-4eae-87cf-b14ae6a939b0 
+使用方法非常简单 
+在项目属性窗口中,选择"生成事件",在"生成后事件命令行"下的文本框中输入 
+ilmerge /ndebug /t:dll /log c:/1/DevExpress.Data.v7.3.dll c:/1/DevExpress.OfficeSkins.v7.3.dll c:/1/DevExpress.Utils.v7.3.dll c:/1/log4net.dll /out:c:/1/kkun/Tstring.Core.DLL 
+然后编译就可以合并多个DLL到一个DLL了, 
+其中有两个非常重要的参数,更多的参数可以看安装后的帮助文件 
+/log 后边直接跟你要合并的DLL,多个DLL用空格隔开即可 
+/out:参数后跟要生成的DLL名称,该DLL可以实际存在,也可以不存在 
+更多高级技巧还要自己多看帮助, 
+这里有一些小技巧,例如,ILMerge合并后的DLL将默认使用第一个输入的DLL的AssemblyInfo的声明, 
+那现在你可以把自己写的DLL放在第一位, 
+而把类似log4net,aspnetpager等第三方DLL放到后面,这样生成的DLL就是你自己的AssemblyInfo了, 
+单看程序集别人基本上不会猜到你用了那些第三方控件了!

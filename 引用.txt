@@ -1,0 +1,14 @@
+[1] 武晓钊.车联网技术体系与产业链分析[J].中国流通经济,2012,26(8):47-52.
+[2] 王建强,李世威,曾俊伟等.车联网发展模式探析[J].计算机技术与发展,2011,21(12):235-238.
+[3] 何廷润,李军芳.车联网核心技术与商业模式的探讨[J].移动通信 ,2013,(15):10-14.
+[4] 宁祥峰,张春业,万伟等.基于LTE系统的物联网架构的研究与设计[J].计算机应用,2010,30(z1):6-9,39.
+[5] 舒浩敏.CAN在汽车总线中的应用研究[J].企业技术开发（下半月）,2009,28(12):42.
+[6] 陆军,郑红武.汽车OBD系统简述[J].装备制造技术,2012,(8):135-138.
+[7] 尤亮.基于流媒体技术的在线视频教学系统的设计与实现[D]厦门:厦门大学,2008.
+[8] 潘文婵,章韵.Wireshark在TCP/IP网络协议教学中的应用[J].计算机教育,2010,(6):158-160,111.
+[9] 张白,宋安军.基于Iperf的网络性能测量研究[J].电脑知识与技术,2009,5(36):10227-10229.
+[10] 谷岩.利用Java的Socket编程机制实现在线交谈[J].计算机工程与设计,2004,25(6):944-946,957.
+[11] 海洋,寿国础,胡怡红等.基于RFC2544测试的网络测试仪的设计与实现[J].计算机工程,2008,34(13):95-97.
+[12] Angela Orebaugh,Gilbert Ramirez and Jay Beale. Wireshark & Ethereal Network Protocol Analyzer Toolkit[M]. Burlington:Syngress Press,2006.
+[13] Mario Gerla,Leonard Kleinrock. Vehicular networks and the future of the mobile internet [J].Computer Networks,1 February 2011(Volume 55, Issue 2):457–469
+[14] http://www.eclipse.org/swt/

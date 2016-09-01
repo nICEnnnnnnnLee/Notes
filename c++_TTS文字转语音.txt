@@ -1,0 +1,25 @@
+#include<sapi.h>
+#include<iostream>
+http://blog.csdn.net/windows_nt/article/details/19936335
+
+#pragma comment(lib,"sapi.lib");
+#pragma comment(lib,"ole32.lib");//需要调用ole32.dll
+
+int main(int argc,char** argv)
+{
+ISpVoice* pVoice = NULL;//初始化COM对象
+if(FAILED(::CoInitialize(NULL))) 
+return FALSE;
+std::cout<<"speak:Hello world,nice to meet you";
+//获取ISpVoice接口
+HRESULT hr = CoCreateInstance(CLSID_SpVoice,NULL,CLSCTX_ALL,IID_ISpVoice,(void**)&pVoice);
+if(SUCCEEDED(hr))
+{
+hr = pVoice->Speak(L"Hello world,nice to meet you",0,NULL);
+pVoice->Release();
+pVoice = NULL;
+}
+::CoUninitialize();
+return TRUE;
+}
+

@@ -1,0 +1,10 @@
+
+---------桌面
+System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop);
+
+
+---------当前程序路径
+System.Environment.CurrentDirectory;
+System.Windows.Forms.Application.StartupPath;
+//包含程序名称
+System.Windows.Forms.Application.ExecutablePath;

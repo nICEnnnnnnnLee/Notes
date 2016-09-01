@@ -1,0 +1,219 @@
+1. Sax概述
+SAX是一种占用内存少且解析速度快的解析器，它采用的是事件启动，不需要解析完整个文档，而是按照内容顺序看文档某个部分是否符合xml语法，如果符合就触发相应的事件，所谓的事件就是些回调方法（callback），这些方法 定义在ContentHandler中，下面是其主要方法：
+startDocument（）：当遇到文档的时候就触发这个事件 调用这个方法 可以在其中做些预处理工作，如：申请对象资源
+endDocument（）：当结束文档的时候就触发这个事件 调用这个方法 可以在其中做些善后工作，如：释放申请的对象资源
+startElement（String namespaceURI, String localName, String qName, Attributes atts）：当遇开始标签的时候就会触发这个方法。
+endElement（String uri, String localName, String name）：当遇到结束标签时触发这个事件，调用此法可以做些善后工作。
+charachers（char [] ch, int start, int length）：当遇到xml内容时触发这个方法，用new String(ch,start,length)可以接受内容。 
+
+Sax方式创建XML，应用了标准xml构造器 javax.xml.transform.sax.TransformerHandler 事件来创建 XML 文档，需要导入以下内容
+javax.xml.transform
+javax.xml.transform.sax.SAXTransformerFactory;
+javax.xml.transform.sax.TransformerHandler;
+javax.xml.transform.Transformer;
+javax.xml.transform.TransformerConfigurationException;
+javax.xml.transform.TransformerFactoryConfigurationError;
+javax.xml.transform.OutputKeys;
+javax.xml.transform.stream.StreamResult;
+javax.xml.transform.sax.SAXTransformerFactory;
+javax.xml.parsers
+javax.xml.parsers.SAXParser;
+javax.xml.parsers.SAXParserFactory;
+javax.xml.parsers.FactoryConfigurationError;
+javax.xml.parsers.ParserConfigurationException;
+org.xml.sax
+org.xml.sax.Attributes;
+org.xml.sax.SAXException;
+org.xml.sax.helpers.AttributesImpl;
+org.xml.sax.helpers.DefaultHandler;
+
+2.Sax 创建 XML
+首先，SAXTransformerFactory.newInstance() 创建一个工厂实例 factory
+接着，factory.newTransformerHandler() 获取 TransformerHandler 的 handler 对象
+然后，通过 handler 事件创建handler.getTransformer()、 handler.setResult(result)，以及 startDocument()、startElement、characters、endElement、endDocument()等
+
+	/** Sax方式，创建 XML  */
+	public String saxCreateXML(){
+		StringWriter xmlWriter = new StringWriter();
+
+		Person []persons = new Person[3];		// 创建节点Person对象
+		persons[0] = new Person(1, "sunboy_2050", "http://blog.csdn.net/sunboy_2050");
+		persons[1] = new Person(2, "baidu", "http://www.baidu.com");
+		persons[2] = new Person(3, "google", "http://www.google.com");
+		
+		try {
+			SAXTransformerFactory factory = (SAXTransformerFactory)SAXTransformerFactory.newInstance();
+			TransformerHandler handler = factory.newTransformerHandler();
+			
+			Transformer transformer = handler.getTransformer();		// 设置xml属性
+			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+			transformer.setOutputProperty(OutputKeys.ENCODING, "utf-8");
+			transformer.setOutputProperty(OutputKeys.VERSION, "1.0");
+			
+			StreamResult result = new StreamResult(xmlWriter);		// 保存创建的xml
+			handler.setResult(result);
+			
+			handler.startDocument();
+			AttributesImpl attr = new AttributesImpl();
+			
+			attr.clear();
+			attr.addAttribute("", "", "author", "", "homer");
+			attr.addAttribute("", "", "date", "", "2012-04-27");
+			handler.startElement("", "", "root", attr);
+			
+			int personsLen = persons.length;
+			for(int i=0; i<personsLen; i++){
+				attr.clear();
+				handler.startElement("", "", "person", attr);
+				
+				attr.clear();
+				handler.startElement("", "", "id", attr);
+				String id = persons[i].getId() + "";
+				handler.characters(id.toCharArray(), 0, id.length());
+				handler.endElement("", "", "id");
+
+				attr.clear();
+				handler.startElement("", "", "name", attr);
+				String name = persons[i].getName();
+				handler.characters(name.toCharArray(), 0, name.length());
+				handler.endElement("", "", "name");
+
+				attr.clear();
+				handler.startElement("", "", "blog", attr);
+				String blog = persons[i].getBlog();
+				handler.characters(blog.toCharArray(), 0, blog.length());
+				handler.endElement("", "", "blog");
+				
+				handler.endElement("", "", "person");
+			}
+			
+			handler.endElement("", "", "root");
+			handler.endDocument();
+			
+		} catch (TransformerFactoryConfigurationError e) {		// SAXTransformerFactory.newInstance
+			e.printStackTrace();
+		} catch (TransformerConfigurationException e) {			// factory.newTransformerHandler
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {		// transformer.setOutputProperty
+			e.printStackTrace();
+		} catch (SAXException e) {		// handler.startDocument
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		savedXML(fileName, xmlWriter.toString());
+		return xmlWriter.toString();
+	}
+
+3、Sax解析XML
+	/** Sax方式，解析 XML  */
+	public String saxResolveXML(){
+		StringWriter xmlWriter = new StringWriter();
+
+		InputStream is = readXML(fileName);
+		try {
+			SAXParserFactory factory = SAXParserFactory.newInstance();
+			SAXParser saxParser = factory.newSAXParser();
+			
+			PersonHandler handler = new PersonHandler();	// person处理Handler
+			saxParser.parse(is, handler);					// handler解析xml
+			
+			// 获取解析的xml
+			String xmlHeader = handler.getXMLHeader();
+			xmlWriter.append(xmlHeader);
+			
+			List<Person> personsList = handler.getPersons();
+			int personsLen = personsList.size();
+			for(int i=0; i<personsLen; i++){
+				xmlWriter.append(personsList.get(i).toString()).append("\n");
+			}
+			
+		} catch (FactoryConfigurationError e) {			// SAXParserFactory.newInstance
+			e.printStackTrace();
+		} catch (ParserConfigurationException e) {		// factory.newSAXParser
+			e.printStackTrace();
+		} catch (SAXException e) {			// factory.newSAXParser
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {		// saxParser.parse
+			e.printStackTrace();
+		} catch (IOException e) {			// saxParser.parse
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return xmlWriter.toString();
+	}
+	
+	/** Handler处理类 */
+	private final class PersonHandler extends DefaultHandler{
+		private List<Person> personsList = null;	// 保存person
+		private Person person = null;
+		private StringBuffer xmlHeader;				// 保存xml头部信息
+		private String tag = null;			// xml Element
+		
+		/** 返回解析的xml头部信息 */
+		public String getXMLHeader(){
+			return xmlHeader.toString();
+		}
+		
+		/** 返回解析的Person实例数组 */
+		public List<Person> getPersons(){
+			return personsList;
+		}
+		
+		@Override
+		public void startDocument() throws SAXException{
+			super.startDocument();
+			personsList = new ArrayList<Person>();
+			xmlHeader = new StringBuffer();
+		}
+		
+		@Override
+		public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException{
+			super.startElement(uri, localName, qName, attributes);
+			if("root".equals(localName)) {
+				String attrAuthor = attributes.getValue(0);
+				String attrDate = attributes.getValue(1);
+				xmlHeader.append("root").append("\t\t");
+				xmlHeader.append(attrAuthor).append("\t");
+				xmlHeader.append(attrDate).append("\n");
+			} else if("person".equals(localName)) {
+				person = new Person();
+			} 
+			tag = localName;
+		}
+		
+		@Override
+		public void characters(char[] ch, int start, int length) throws SAXException {
+			super.characters(ch, start, length);
+			if (null != tag) {
+				String value = new String(ch, start, length);
+				System.out.println("value = " + value);
+				if ("id".equals(tag)) {
+					person.setId(new Integer(value));
+				} else if ("name".equals(tag)) {
+					person.setName(value);
+				} else if ("blog".equals(tag)) {
+					person.setBlog(value);
+				}
+			}
+		}
+		
+		@Override
+		public void endElement(String uri, String localName, String qName) throws SAXException {
+			if("person".equals(qName)) {
+				personsList.add(person);
+				person = null;
+			}
+			tag = null;
+			super.endElement(uri, localName, qName);
+		}
+		
+		@Override
+		public void endDocument() throws SAXException{
+//			personsList = null;
+			super.endDocument();
+		}
+	}

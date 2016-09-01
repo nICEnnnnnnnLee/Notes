@@ -1,0 +1,72 @@
+http://www.gotapi.com/
+ 语言：英语
+ 简介：HTML,CSS,XPATH,XSL,JAVASCRIPT等API的查询网站。
+http://www.w3schools.com/
+ 语言：英语
+ 简介：W3C制定的标准诸如XML,HTML,XSL等等的在线学习教程。
+http://www.xml.org.cn/
+ 语言：中文
+ 简介：可以说是XML的中国官方网吧。W3C标准的翻译组织与XML系列技术交流社区.
+http://www.connectionstrings.com/
+ 语言：英语
+ 简介：这里几乎收集了所有的数据库连接字符(connectionstring)了。
+http://www.itpub.net/
+ 语言：中文
+ 简介：我个人认为是国内最专业的综合性行业性技术类社区.
+http://www.netvtm.com/
+ 语言：中文
+ 简介：内容多翻译于w3schools.com，少有原创。不过还是应该鼓励精品翻译。
+http://www.regexlib.com
+ 语言：英语
+ 简介：正则表达式库。搜索正则表达式用。
+http://www.rexv.org/
+ 语言：英语
+ 简介：用Ajax开发的在线正则表达式验证器.
+http://www.koders.com/
+ 语言：英语
+ 简介：代码搜索引擎，可以搜索几十种语言的代码。
+http://www.123aspx.com/Rotor/
+ 语言：英语
+ 简介：.Net Frameworks的源代码。
+http://dotnet.aspx.cc/
+ 语言：中文
+ 简介：孟宪会的资料站，虽资料大多比较简单，却解决了开发中的大部分问题？！
+http://www.dofactory.com/Patterns/Patterns.aspx
+ 语言：英语
+ 简介：23种设计模式的实现参考。特点是UML+精练的示例代码+简洁的解说风格。
+http://www.open-open.com/
+ 语言：中文
+ 简介：Java开源大全,如果你用.NET，照着它的名字前加N找找应该都有吧 ？！：）
+http://www.riacn.com/
+ 语言：中文
+ 简介：我认为是国内少有的RIA专业技术站于交流社区.
+http://www.cnpaf.net/
+ 语言：中文
+ 简介：中国协议分析网，很全面的协议资料网。
+http://www.pinvoke.net/
+ 语言：英语
+ 简介：通过.net调用win32等非受控API的资料大全。
+http://bbs.51js.com/
+ 语言：中文
+ 简介：无忧脚本,专业的脚本技术社区。
+http://www.c-sharpcorner.com/
+ 语言：英语
+ 简介：C# Corner,学习c#的好地方.
+http://blog.csdn.net/group/experts/
+ 语言：中文
+ 简介：CSDN专家群,汇集CSDN专家的电子报.
+http://www.codeproject.com/
+ 语言：英语
+ 简介：有很多可学习的示例代码，特点是丰富，深入浅出．
+http://www.gotdotnet.com/
+ 语言：英语
+ 简介：微软开发维护的关于.net framework交流社区.
+http://www.sourceforge.net/
+ 语言：英语
+ 简介：全球最大的开源软体站点
+http://www.asp.net/QuickStart/
+ 语言：英语
+ 简介：Microsoft .NET Framework SDK QuickStart Tutorials
+http://www.matrix.org.cn/
+ 语言：中文
+ 简介：与 Java 共舞,Java优秀的专业社区,文章质量很高.做.Net的朋友也可以从其借鉴很多知识.

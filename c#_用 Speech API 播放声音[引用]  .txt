@@ -1,0 +1,59 @@
+http://blog.163.com/j_yd168/blog/static/49679728200851891829274/
+
+先决条件: 
+
+装了office2000或更新版本中带的MS语音输入法. 这可能就是MS中国研究院的成果之一. 有语音输入功能和语音拼读功能.
+
+下载ms speech api sdk 5.0或5.1, 如果只用C#开发, 则不用装这个, 如果希望用C++开发, 加装语音库之类的, 不妨也装这个好了. 装了这个, 第一条的也就包含了.
+
+C#工程里加上对com对象"Microsoft Speech API 5.0"的引用. Interop而已.
+
+不再多说, 只贴个代码, 以备日后参考:
+
+public static void testtts()
+{
+    //参考文档的起始链接在:
+    //http://msdn.microsoft.com/library/default.asp?url=/library/en-us/SAPI51sr/html/ispvoice_speak.asp
+
+    // 引擎COM对象.
+    SpeechLib.SpVoiceClass sp = new SpeechLib.SpVoiceClass();            
+    
+    // 朗读的内容到一个文件流里去.
+    SpeechLib.SpFileStreamClass fs = new SpeechLib.SpFileStreamClass();
+    //设定流的格式, 48kHZ, 16Bit, 立体声. 如果是电话音质, 8K8bit单声道就可以了.
+    fs.Format.Type = SpeechLib.SpeechAudioFormatType.SAFT48kHz16BitStereo;
+    fs.Open("c:\\test.wav", SpeechLib.SpeechStreamFileMode.SSFMCreateForWrite, false);
+    sp.AudioOutputStream = fs;    // 如果不指定这个内容, 那就会在计算机的声卡上放出来.
+    // The format of selection criteria is 
+    //"Attribute = Value" and "Attribute != Value." 
+    // Voice attributes include 
+    //"Gender," "Age," "Name," "Language," and "Vendor."
+    // 上述这些属性的值可以从注册表的
+    //HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\MSSimplifiedChineseVoice\Attributes
+    // 看到
+
+    // 得到属性符合指定要求的所有的拼读token. "Language = 409"表示得到所有的英文拼读器. 等号两边的空格不可少! 
+    // 如果有多个过滤条件要指定, 中间用分号分开, 如要指定英文女声, 则为
+    // "Language = 409; Gender = Female"
+    SpeechLib.ISpeechObjectTokens sps = sp.GetVoices("Language = 409", "");
+    // 可能有多个拼读器. 咱们每个都用一遍,  是不同的嗓音, 有男有女.
+    for (int i = 0; i < sps.Count; i ++)
+    {
+        sp.Voice = sps.Item(i);    //这里这个圆括号不是我写错了, 就是这样的.这是一个方法,不是索引器.
+
+        sp.Speak("User experience and interface design in the context of creating software represents an approach that puts the user, rather than the system, at the center of the process.", 
+            SpeechLib.SpeechVoiceSpeakFlags.SVSFDefault);
+        // 可以用标志位指定异步调用这个方法. 
+    }
+
+    // 得到中文拼读器, 因为目前只有一个, 也就不用for了.
+    sps = sp.GetVoices("Language = 804", "");
+    if (sps.Count > 0)
+    {
+        sp.Voice = sps.Item(0);
+        sp.Speak("中华人民共和国, 中央人民政府, 成立了!.", 
+            SpeechLib.SpeechVoiceSpeakFlags.SVSFDefault);
+    }
+    fs.Close();
+    Marshal.ReleaseComObject(sp);
+}

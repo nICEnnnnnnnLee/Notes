@@ -1,0 +1,3 @@
+[AUTORUN]
+OPEN=D:\Program Files\Tencent\QQ\QQProtect\Bin\QQProtect.exe
+ICON=D:\Program Files\Tencent\QQ\QQProtect\Bin\QQProtect.exe,1

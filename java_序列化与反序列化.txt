@@ -1,0 +1,25 @@
+
+
+1.JDK类库中序列化的步骤
+
+步骤一：创建一个对象输出流，它可以包装一个其它类型的目标输出流，如文件输出流：
+
+ObjectOutputStream out = new ObjectOutputStream(new fileOutputStream(“D:\\objectfile.obj”));
+
+步骤二：通过对象输出流的writeObject()方法写对象：
+
+out.writeObject(“Hello”);
+
+out.writeObject(new Date());
+
+2.JDK类库中反序列化的步骤
+
+步骤一：创建一个对象输入流，它可以包装一个其它类型输入流，如文件输入流：
+
+ObjectInputStream in = new ObjectInputStream(new fileInputStream(“D:\\objectfile.obj”));
+
+步骤二：通过对象输出流的readObject()方法读取对象：
+
+String obj1 = (String)in.readObject();
+
+Date obj2 = (Date)in.readObject();

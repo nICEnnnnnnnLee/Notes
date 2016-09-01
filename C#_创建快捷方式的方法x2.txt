@@ -1,0 +1,155 @@
+http://www.cnblogs.com/zjfree/archive/2011/01/18/1937970.html
+http://www.cnblogs.com/08shiyan/archive/2011/09/29/2195633.html
+
+用WSH直接创建快捷方式: 
+1.首先要添加引用. 
+添加引用的方法非常简单,右击你的项目并选择添加引用, 
+选择 COM 选项卡并选择 Windows Script Host Object Model 
+2.引用命名空间 
+using System.Runtime.InteropServices;//互动服务 
+using IWshRuntimeLibrary; 
+3.创建快捷方式(注释中有详细说明) 
+//实例化WshShell对象 
+WshShell shell = new WshShell(); 
+
+//通过该对象的 CreateShortcut 方法来创建 IWshShortcut 接口的实例对象 
+IWshShortcut shortcut = (IWshShortcut)shell.CreateShortcut( 
+    Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "//ShortCut.lnk"); 
+
+//设置快捷方式的目标所在的位置(源程序完整路径) 
+shortcut.TargetPath = System.Reflection.Assembly.GetExecutingAssembly().Location; 
+
+//应用程序的工作目录 
+//当用户没有指定一个具体的目录时，快捷方式的目标应用程序将使用该属性所指定的目录来装载或保存文件。 
+shortcut.WorkingDirectory = System.Environment.CurrentDirectory; 
+
+//目标应用程序窗口类型(1.Normal window普通窗口,3.Maximized最大化窗口,7.Minimized最小化) 
+shortcut.WindowStyle = 1; 
+
+//快捷方式的描述 
+shortcut.Description = "ChinaDforce YanMang"; 
+
+//可以自定义快捷方式图标.(如果不设置,则将默认源文件图标.) 
+//shortcut.IconLocation = System.Environment.SystemDirectory + "\\" + "shell32.dll, 165"; 
+
+//设置应用程序的启动参数(如果应用程序支持的话) 
+//shortcut.Arguments = "/myword /d4s"; 
+
+//设置快捷键(如果有必要的话.) 
+//shortcut.Hotkey = "CTRL+ALT+D"; 
+
+//保存快捷方式 
+shortcut.Save(); 
+
+缺点: 
+用这种方法写的程序,必须有Interop.IWshRuntimeLibrary.dll跟着, 
+才能正确执行.对于创建"单文件程序"的人来讲,麻烦了吧. 
+
+
+通过创建VBS,并执行,创建方式: 
+1.首先看一下VBS创建快捷方式的代码: 
+'VBS实例 
+set WshShell = WScript.CreateObject("WScript.Shell") 
+strDesktop = WshShell.SpecialFolders("Desktop") '获得桌面目录 
+set oShellLink = WshShell.CreateShortcut(strDesktop & "\D4S.lnk") '快捷方式存放目录及名称 
+oShellLink.TargetPath = "X:\Program Files\XXX.exe"   '指向的可执行文件 
+oShellLink.WindowStyle = 1 '运行方式(窗体打开的方式) 
+oShellLink.Hotkey = "CTRL+SHIFT+F"    '快捷键 
+oShellLink.IconLocation = "X:\Program Files\XXX.exe, 0" '图标(同样可不指定) 
+oShellLink.Description = "ChinaDforce YanMang"    '备注信息 
+oShellLink.WorkingDirectory = "X:\Program Files\"   '起始目录 
+oShellLink.Save '保存快捷方式 
+2.那我们如何在C#中使用VBS呢? 
+方法我想应该有很多吧! 
+在这里介绍一种"最笨"但最直接的方法. 
+思路如下: 
+>>> 生成VBS全部代码文本; 
+>>> 写入临时文件"temp.vbs"; 
+>>> 用Process打开这个文件执行. 
+3.下面是C#中实现的关键代码: 
+//生成VBS代码 
+string vbs = this.CreateVBS(); 
+//以文件形式写入临时文件夹 
+this.WriteToTemp(vbs); 
+//调用Process执行 
+this.RunProcess(); 
+//生成VBS代码 
+string vbs = this.CreateVBS(); 
+//以文件形式写入临时文件夹 
+this.WriteToTemp(vbs); 
+//调用Process执行 
+this.RunProcess(); 
+/// 
+/// 创建VBS代码 
+/// 
+/// 
+private string CreateVBS() 
+{ 
+    string vbs = string.Empty; 
+    vbs += ("set WshShell = WScript.CreateObject(\"WScript.Shell\")\r\n"); 
+    vbs += ("strDesktop = WshShell.SpecialFolders(\"Desktop\")\r\n"); 
+    vbs += ("set oShellLink = WshShell.CreateShortcut(strDesktop & \"\\D4S.lnk\")\r\n"); 
+    vbs += ("oShellLink.TargetPath = \"" + System.Reflection.Assembly.GetExecutingAssembly().Location + "\"\r\n"); 
+    vbs += ("oShellLink.WindowStyle = 1\r\n"); 
+    vbs += ("oShellLink.Description = \"ChinaDforce YanMang\"\r\n"); 
+    vbs += ("oShellLink.WorkingDirectory = \"" + System.Environment.CurrentDirectory + "\"\r\n"); 
+    vbs += ("oShellLink.Save"); 
+    return vbs; 
+} 
+/// 
+/// 写入临时文件 
+/// 
+/// 
+private void WriteToTemp(string vbs) 
+{ 
+    if (!string.IsNullOrEmpty(vbs)) 
+    { 
+        //临时文件 
+        string tempFile = Environment.GetFolderPath(Environment.SpecialFolder.Templates) + "[url=file://\\temp.vbs]\\temp.vbs[/url]"; 
+        //写入文件 
+        FileStream fs = new FileStream(tempFile, FileMode.Create, FileAccess.Write); 
+        try 
+        { 
+            //这里必须用UnicodeEncoding. 因为用UTF-8或ASCII会造成VBS乱码 
+            System.Text.UnicodeEncoding uni = new UnicodeEncoding(); 
+            byte[] b = uni.GetBytes(vbs); 
+            fs.Write(b, 0, b.Length); 
+            fs.Flush(); 
+            fs.Close(); 
+        } 
+        catch (Exception ex) 
+        { 
+            MessageBox.Show(ex.Message, "写入临时文件时出现错误", MessageBoxButtons.OK, MessageBoxIcon.Error); 
+        } 
+        finally 
+        { 
+            //释放资源 
+            fs.Dispose(); 
+        } 
+    } 
+} 
+/// 
+/// 执行VBS中的代码 
+/// 
+private void RunProcess() 
+{ 
+    string tempFile = Environment.GetFolderPath(Environment.SpecialFolder.Templates) + "\\temp.vbs"; 
+    if (File.Exists(tempFile)) 
+    { 
+        //执行VBS 
+        Process.Start(tempFile); 
+    } 
+} 
+private void btn退出_Click(object sender, EventArgs e) 
+{ 
+    Application.Exit(); 
+    //清除临时文件 
+    File.Delete(Environment.GetFolderPath(Environment.SpecialFolder.Templates) + "\\temp.vbs"); 
+} 
+
+强调一点: 
+在写入VBS文件时,一定要用UnicodeEncoding. 
+因为UTF-8和ASCII码,都会导致VBS生成快捷方式的时候, 
+产生乱码,而导致快捷方式错误. 
+本人原来使用UTF8Encoding的时候,不放在包含中文的路径中还可以,但一出现中文就挂了! 
+困扰我好半天,才发现的这个细节.

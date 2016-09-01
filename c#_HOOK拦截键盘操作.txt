@@ -1,0 +1,228 @@
+http://blog.csdn.net/xieqidong/article/details/2391364
+
+用C#实现低级Windows API键盘钩子
+ 
+ 
+         一提到钩子（Hook）程序，通常都会想到是用C/C++编写的，难道托管代码（如C#）就毫无用武之地了吗，本文将要讲解的，就是如何在C#中实现键盘钩子。
+         .NET Framework对键盘事件只提供了一般级别的访问，如KeyPress、KeyUP、KeyDown等等，但是无法用于处理按键的组合，如Alt+Tab或Win键，所以，只能绕过Framework，在操作系统级捕捉键盘事件。要达到此目的，程序需要使用Windows API函数并把自身添加到“钩子链”中，以监听来自操作系统的键盘消息。当接收到此类消息之后，就可以选择是继续传递下去，还是就此截留。另外，文中的代码只适用于基于NT的Windows系统（NT、2000、XP），且并不能屏蔽Ctrl+Alt+Delete。
+ 
+ 
+         实例化类
+         在keyboard.cs的KeyboardHook类中，已设置好键盘钩子并进行了相应的处理，这个类实现了IDisposable，因此，最简单对它进行实例化的办法，就是在程序的Main()方法中使用using关键字，这个方法包装了对Application.Run()的调用，确保程序一启动，就已经设置好钩子，而在程序退出之后，会自动卸载钩子。
+         类会引发一个事件，通知程序有一个键已被按下，所以程序主窗体必须能访问Main()方法中创建的KeyboradHook实例，最简单的做法就是把它作为公有成员变量。
+         KeyboardHook有以下构造函数，用于打开及关闭相应设置：
+ 
+? KeyBoardHook()：拦截所有键击，且不会继续传递给Windows或其他程序。
+? KeyboardHook(string param)：把字符串转换成参数enum其中的一个值，接着调用以下构造函数。
+? KeyboardHook(KeyboardHook.Parameters enum)：基于参数enum的值，可以进行以下设置。
+n Parameters.AllowAltTab：允许用户使用Alt+Tab切换到其他程序。
+n Parameters.AllowWindowsKey：允许用户使用Ctrl+Esc或Win键访问任务栏及开始菜单。
+n Parameters.AllowAltTabAndWindows：允许使用Alt+Tab、Ctrl+Esc和Win键。
+n Parameters.PassAllKeysToNextApp：如果参数为true，所有的键击将会继续往下传递。
+ 
+因此，最简单实例化该类的方法就是拦截所有键击：
+ 
+ 
+public static KeyboardHook kh;
+ 
+[STAThread]
+static void Main()
+{
+ //……
+ using (kh = new KeyboardHook())
+ {
+    Application.Run(new Form1());
+ }
+ 
+ 
+         处理KeyIntercepted事件
+         当有键按下时，KeyboardHook类引发一个KeyIntercepted事件，其含有KeyboardHookEventArgs，这就需要由KeyboardHookEventHandler类型的方法来进行处理了，如下所示：
+ 
+ 
+kh.KeyIntercepted += new KeyboardHook.KeyboardHookEventHandler(kh_KeyIntercepted);
+ 
+ 
+         KeyboardHookEventArgs会对当前键击返回以下信息：
+ 
+? KeyName：键名，可由捕获的键代码转换成System.Windows.Forms.Keys获得。
+? KeyCode：由键盘钩子返回的原始键代码。
+? PassThrough：KeyboardHook的实例是否配置为允许键击传递给其他程序。
+ 
+还可在其中调用另外的方法，执行其他任务，下面是一个简单例子：
+ 
+ 
+void kh_KeyIntercepted(KeyboardHookEventArgs e)
+{
+ if (e.PassThrough)
+ {
+    this.TopMost = false;
+ }
+ ds.Draw(e.KeyName);
+}
+ 
+ 
+         实现低级Windows API键盘钩子
+         在user32.dll文件中有三个Windows API函数可用于此目的：
+ 
+? SetWindowsHookEx：设置键盘钩子。
+? UnhookWindowsHookEx：取消键盘钩子。
+? CallNextHookEx：这个函数把键击消息传递给下一下监听键盘事件的应用程序。
+ 
+ 
+所以，程序的关键之处在于实现前两个函数，且屏蔽第三个函数，这就意味着任何键击都不可能超出此程序之外。
+第一步，包含System.Runtime.InteropServices命名空间并导入API函数，我们就从SetWindowsHookEx开始讲解：
+ 
+ 
+using System.Runtime.InteropServices
+...
+//Inside class:
+ 
+[DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+private static extern IntPtr SetWindowsHookEx(int idHook,
+ LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
+ 
+ 
+         第二步，调用SetWindowsHookEx设置好钩子，并传递下面4个参数：
+ 
+? idHook：这个值决定了要设置什么类型的钩子。例如，SetWindowsHookEx也可用于挂钩鼠标事件，在这里，把它设为13，代表键盘钩子id。如果要让代码的可读性更高，可设为常量WH_KEYBOARD_LL。
+? lpfn：一个指向处理键盘事件函数的long指针。在C#中，指针是通过传递一个代表类型的实例来实现的，其引用了相关的方法，这个方法将会在钩子每次使用时被调用。（另外，这里要注意一点，代理实现需要存储在类中的成员变量中，这可预防在第一个方法调用完毕后被垃圾回收。）
+? hMod：用于设置钩子的应用程序的实例句柄。大多数程序中都把它设为IntPtr.Zero，事实上，它也不可能为此程序实例之外的第二个值，所以，使用了kernel32.dll中的GetModuleHandle函数来确定准确的实例值。
+? dwThreadId：当前线程的ID。把它设为0表示钩子为全局的，这也是对于低级键盘钩子必须的值。
+ 
+ 
+SetWindowsHookEx返回一个钩子ID，可用于在程序退出时注销挂钩，所以需要把它存储在一个成员变量中以备用。下面是KeyboardHook类的相关代码：
+ 
+ 
+private HookHandlerDelegate proc;
+private IntPtr hookID = IntPtr.Zero;
+private const int WH_KEYBOARD_LL = 13;
+ 
+ 
+public KeyboardHook()
+{
+ proc = new HookHandlerDelegate(HookCallback);
+ using (Process curProcess = Process.GetCurrentProcess())
+ using (ProcessModule curModule = curProcess.MainModule)
+ {
+     hookID = SetWindowsHookEx(WH_KEYBOARD_LL, proc,
+                    GetModuleHandle(curModule.ModuleName), 0);
+ }
+}
+ 
+ 
+         处理键盘事件
+         前面提到，SetWindowsHookEx需要一个指向回调函数的指针，其用于处理键盘事件，这个回调函数形式如下：
+ 
+ 
+LRESULT CALLBACK LowLevelKeyboardProc
+(   int nCode,
+    WPARAM wParam,
+    LPARAM lParam
+);
+ 
+ 
+         在C#中，设置一个指向函数的指针是使用代理，所以在SetWindowsHookEx中，第一步是声明一个代理：
+ 
+ 
+private delegate IntPtr HookHandlerDelegate(
+        int nCode, IntPtr wParam, ref KBDLLHOOKSTRUCT lParam);
+ 
+ 
+         接下来，就可编写一个回调函数了，这个函数包含了所有真正处理键盘事件的代码，在KeyboardHook例子中，它会判断键击是否应被传给其他程序，并引发KeyIntercepted事件，下面是简化过不带键击处理的代码：
+ 
+ 
+private const int WM_KEYDOWN = 0x0100;
+private const int WM_SYSKEYDOWN = 0x0104;
+ 
+private IntPtr HookCallback(int nCode, IntPtr wParam, ref KBDLLHOOKSTRUCT lParam)
+{
+ //只过滤KeyDown事件中的wParam，否则代码会对每次键击执行两次，
+ //分别是KeyDown和KeyUp。
+ //WM_SYSKEYDOWN用于截取Alt键和其他键的组合。
+ 
+ if (nCode >= 0 &&
+      (wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN))
+ {
+    //引发事件
+    OnKeyIntercepted(new KeyboardHookEventArgs(lParam.vkCode, AllowKey));
+    //返回一个伪值以截取键击。
+    return (System.IntPtr)1;
+ }
+ //事件未被处理，把它传递给下一个程序。
+ return CallNextHookEx(hookID, nCode, wParam, ref lParam);
+}
+ 
+ 
+         对HookCallback的引用会被赋值给HookHandlerDelegate的一个实例，并把它传递到SetWindowsHookEx中。
+ 
+         另外，在有键盘事件发生时，下面的参数会传递到HookCallBack中：
+ 
+? nCode：根据MSDN，如果CallNextHookEx的结果值小于0，回调函数应该返回这个值。正常的键盘事件将返回0或大于0的nCode。
+? wParam：这个值表明发生了什么类型的事件：KeyDown或KeyUp，或者按下的键是否为一个系统键（左边还是右边的Alt键）。
+? IParam：存储键击精确信息的一个结构体，如按下键的键盘码。此结构声明在KeyboardHook中：
+ 
+private struct KBDLLHOOKSTRUCT
+{
+ public int vkCode;
+ int scanCode;
+ public int flags;
+ int time;
+ int dwExtraInfo;
+}
+ 
+ 
+         两个public参数是KeyboardHook中回调函数唯一使用到的参数，vkCode返回虚拟键盘码，其可转换为System.Windows.Forms.Keys以得到键名，而flags表明这是否为一个扩展键（如Win键），或Alt键是否同时按下。
+         如果不需要flags及KBDLLHOOKSTRUCT的其他成员提供的信息，那么，回调函数及代理的声明可作如下修改：
+ 
+ 
+private delegate IntPtr HookHandlerDelegate(
+        int nCode, IntPtr wParam, IntPtr lParam);
+ 
+ 
+         在本例中，IParam将只返回vkCode。
+ 
+ 
+         传递键击给下一个程序
+         通常，键盘钩子回调函数都由调用CallNextHookEx并返回其结果值来结束，这确保其他程序也有机会处理键击事件。然而，KeyboardHook的关键性功能就是为了防止键击传递给其他程序，所以，只要它捕获了一个键击，HookCallback将返回一个伪值：
+ 
+return (System.IntPtr)1;
+ 
+ 
+         另一方面，如果未处理键击事件，或从KeyboardHook重载的构造函数传递进来的参数允许特定键组合通过，它也确实调用了CallNextHookEx。
+ 
+         如下所示，我们导入了user32.dll中的CallNextHookEx函数：
+ 
+ 
+[DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode,
+ IntPtr wParam, ref KeyInfoStruct lParam);
+ 
+ 
+         导入后的函数由HookCallback方法中的以下这行调用，其确保通过钩子接收到的所有参数都会传递给下一个程序：
+ 
+ 
+CallNextHookEx(hookID, nCode, wParam, ref lParam);
+ 
+ 
+         正如前面所提过的，如果IParam中的flags无关紧要，导入的CallNextHookEx函数符号能修改为define lParam as System.IntPtr。
+ 
+ 
+         注销钩子
+         程序的最后一步就是当KeyboardHook类实例销毁时，注销钩子，我们用了从user32.dll中导入的UnhookWindowsHookEx函数：
+ 
+ 
+[DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+[return: MarshalAs(UnmanagedType.Bool)]
+private static extern bool UnhookWindowsHookEx(IntPtr hhk);
+ 
+ 
+         因为KeyboardHook实现了IDisposable，所以也能在Dispose方法中完成。
+ 
+ 
+public void Dispose()
+{
+ UnhookWindowsHookEx(hookID);
+}
+ 
+ 
+         hookID是构造函数中调用SetWindowsHookEx之后返回的id，这行代码把程序从系统钩子链中移除。

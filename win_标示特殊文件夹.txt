@@ -1,0 +1,376 @@
+标示特殊文件夹
+系统中有一些特殊的文件夹，如回收站、我的电脑、我的文档、网上邻居等。这些文件夹的标示有两种方法：
+1.直接在文件夹名后续上一个"."再加对应的CLSID
+如：把一个文件夹取名为：新建文件夹.{20D04FE0-3AEA-1069-A2D8-08002B30309D}
+（注意：新建文件夹后面有一个半角的句号）
+那么这个文件夹的图标将变为我的电脑的图标，并且在双击该文件夹时将打开我的电脑。
+在下面查看CLSID
+在注册表中展开HKEY_CLASSES_ROOT\CLSID\，在CLSID分支下面就可以看到很多的ID，这些ID对应的都是系统里面不同的程序，文件，系统组件等
+常见组件类对应的CLSID:
+我的文档：450D8FBA-AD25-11D0-98A8-0800361B1103
+我的电脑：20D04FE0-3AEA-1069-A2D8-08002B30309D
+网上邻居：208D2C60-3AEA-1069-A2D7-08002B30309D
+回收站：645FF040-5081-101B-9F08-00AA002F954E
+Internet Explorer：871C5380-42A0-1069-A2EA-08002B30309D
+控制面板：21EC2020-3AEA-1069-A2DD-08002B30309D
+拨号网络/网络连接 :992CFFA0-F557-101A-88EC-00DD010CCC48
+任务计划:D6277990-4C6A-11CF-8D87-00AA0060F5BF
+打印机（和传真）：2227A280-3AEA-1069-A2DE-08002B30309D
+历史文件夹：7BD29E00-76C1-11CF-9DD0-00A0C9034933
+ActiveX缓存文件夹： 88C6C381-2E85-11D0-94DE-444553540000
+公文包： 85BBD920-42A0-1069-A2E4-08002B30309D
+2.第二种是通过一个desktop.ini文件
+还以我的电脑为例：
+新建一个文件夹，名字随便，然后在其下边建立desktop.ini文件，内容如下：
+[.ShellClassInfo]
+CLSID={相应的ID}
+注：有部分病毒会建立这样的文件夹以达到隐藏自身的目的.另外这也是一种我们隐藏小秘密的方法.
+标示文件夹所有者
+这通常见于我的文档等如我的文档里就有这样一个文件，内容如下：
+[DeleteOnCopy]
+Owner=Administrator
+Personalized=5
+PersonalizedName=My Documents
+改变文件夹颜色
+关于这项功能的实现需要注册一个.dll文件ColorFolder.dll。具体情况本人由于未曾尝试，故不能提供相应内容，以下是本人在网上搜到的以供参考。
+改变文件夹颜色
+[.ShellClassInfo]
+IconFile=ColorFolder.dll
+IconIndex=0
+保存为desktop.ini文件，连同ColorFolder.dll文件（Mikebox网盘里有下载）
+如果想同时添加背景图片（bj.jpg）及改变文件夹内文件名颜色！
+[ExtShellFolderViews]
+IconArea_Text=0x000000FF
+Attributes=1
+IconArea_Image=bj.jpg
+[.ShellClassInfo]
+ConfirmFileOp=0
+把名字为bj.jpg的图片也放到同一个文件夹里，再在原有代码下再加上以上这些就可以改变文件夹的背景图片了！更换bj.jpg图片，并修改红色位置的名称（bj.jpg）为更换后的图片名，就可以设置成为你喜欢的背景图片（建议选用jpg格式的）！修改0x000000FF就可以变文件颜色为你想要的颜色！
+0x000000FF为红色
+0x00008000为绿色
+0x00FF0000为蓝色
+0x00FFFFFF为白色！（改变颜色也要有动态链接库文件的支持）
+注册动态链接库：请在开始〉〉〉运行中输入："regsvr32 ColorFolder.dll"（不包括引号，regsvr32和ColorFolder.dll之间有空格！）注册动态链接库到系统即可！
+以上修改完desktop.ini文件后，须要运行（attrib +s 相应文件夹的路径）命令才会生效！
+标识特殊的文件夹名称
+实现方法需要利用desktop.ini中的locallizedresourcename一行，例如：
+LocalizedResourceName=@shell32.dll,-28995
+这一行可以将文件夹的名称显示改成系统文件夹的“我的音乐”
+更多的标识如下：
+LocalizedResourceName=@shell32.dll,-28995---28997
+28996 共享视频
+28995 共享音乐
+28997 共享图像
+---------------------------------------------------
+LocalizedResourceName=@shell32.dll,-12688---12696
+12693收藏夹
+12691 我最近的文档
+---------------------------------------------------
+LocalizedResourceName=@shell32.dll,-21760---21795
+21779 图片收藏
+21780 在线服务
+21781 Program Files
+21782 程序
+21783 收到传真
+21784 发送传真
+21785共享文档
+21790 我的音乐
+---------------------------------------------------
+LocalizedResourceName=@shell32.dll,-22016---22075
+－－－－－－－－－－－－－－－－－－－－
+"@xpsp2res.dll,-6100"="显示桌面"
+"@xpsp1res.dll,-11003"="启动 Internet Explorer 浏览器"
+"@C:\\WINDOWS\\system32\\SHELL32.dll,-9227"="我的文档"
+"@C:\\WINDOWS\\system32\\SHELL32.dll,-9216"="我的电脑"
+"@C:\\WINDOWS\\system32\\SHELL32.dll,-8964"="回收站"
+"@shell32.dll,-22051"="记事本"
+"@C:\\WINDOWS\\system32\\tourstart.exe,-1"="漫游 Windows XP"
+"@shell32.dll,-22022"="命令提示符"
+"@shell32.dll,-22017"="通讯簿"
+"@shell32.dll,-22041"="放大镜"
+"@shell32.dll,-22065"="辅助工具管理器"
+"@shell32.dll,-22052"="屏幕键盘"
+"@shell32.dll,-22040"="本地安全策略"
+"@shell32.dll,-22059"="服务"
+"@shell32.dll,-22023"="计算机管理"
+"@shell32.dll,-22029"="事件查看器"
+"@shell32.dll,-22025"="数据源 (ODBC)"
+"@shell32.dll,-22055"="性能"
+"@C:\\WINDOWS\\system32\\comres.dll,-661"="组件服务"
+"@shell32.dll,-21762"="管理工具"
+"@shell32.dll,-21761"="附件"
+"@shell32.dll,-21760"="辅助工具"
+"@shell32.dll,-21772"="娱乐"
+"@shell32.dll,-22067"="Windows 资源管理器"
+"@shell32.dll,-22062"="同步"
+"@C:\\WINDOWS\\system32\\compatUI.dll,-115"="程序兼容性向导"
+"@C:\\WINDOWS\\system32\\SHELL32.dll,-9217"="网上邻居"
+"@explorer.exe,-7023"="运行（&R)..."
+"C:\\Program Files\\SkyNet\\FireWall\\PFW.exe"="天网防火墙个人版"
+"C:\\WINDOWS\\system32\\ctfmon.exe"="CTF Loader"
+"@C:\\WINDOWS\\ime\\imkr6_1\\imekrcic.dll,-22"="Korean Input System (IME 2002）"
+"@C:\\WINDOWS\\ime\\sptip.dll,-600"="语音识别"
+"@C:\\WINDOWS\\system32\\SHELL32.dll,-22913"="显示连接到此计算机的驱动器和硬件。"
+"@C:\\WINDOWS\\system32\\SHELL32.dll,-9319"="打印机和传真"
+"@C:\\WINDOWS\\system32\\netshell.dll,-1200"="网络连接"
+"@C:\\WINDOWS\\system32\\SHELL32.dll,-8503"="搜索（&E)..."
+"@C:\\WINDOWS\\system32\\mycomput.dll,-400"="管理（&G)"
+"C:\\WINDOWS\\system32\\rundll32.exe"="Run a DLL as an App"
+"@explorer.exe,-7003"="打开一个程序、文件夹、文档或网站。"
+"C:\\WINDOWS\\Explorer.EXE"="Windows Explorer"
+"D:\\Program Files\\QQIP\\CoralQQ.exe"="CoralQQ 加载程序"
+"D:\\Program Files\\Maxthon1.58\\Maxthon.exe"="Maxthon Web Browser"
+"C:\\WINDOWS\\system32\\notepad.exe"="记事本"
+"D:\\Program Files\\QQIP\\QQ.exe"="QQ"
+"C:\\Program Files\\Internet Explorer\\iexplore.exe"="Internet Explorer"
+"C:\\Program Files\\Microsoft Office\\OFFICE11\\WINWORD.EXE"="Microsoft Office Word"
+"C:\\PROGRA~1\\EDITPL~1\\EDITPLUS.EXE"="EditPlus"
+"C:\\Program Files\\Windows NT\\Accessories\\WORDPAD.EXE"="写字板"
+"C:\\WINDOWS\\NOTEPAD.EXE"="记事本"
+"@shell32.dll,-12691"="我最近的文档"
+"D:\\yuanwei\\server\\Tomcat_center\\bin\\startup.bat"="startup"
+"C:\\WINDOWS\\system32\\cmd.exe"="Windows Command Processor"
+"@C:\\WINDOWS\\system32\\notepad.exe,-469"="文本文档"
+"@shell32.dll,-12693"="收藏夹"
+"C:\\Program Files\\AⅥConverter\\AⅥConverter.exe"="AⅥConverter"
+"C:\\WINDOWS\\system32\\taskmgr.exe"="Windows 增强型任务管理器"
+"@shell32.dll,-12710"="运行（&R)"
+"C:\\Program Files\\EditPlus 2\\editplus.exe"="EditPlus"
+"D:\\Program Files\\Maxthon2\\Maxthon.exe"="Maxthon Browser"
+"D:\\Foxmail\\Foxmail.exe"="Internet Mail Client"
+"C:\\Program Files\\WinRAR\\WinRAR.exe"="WinRAR"
+"@wmploc.dll,-1800"="播放"
+"@wmploc.dll,-6502"="Windows Media Player"
+"@%SystemRoot%\\system32\\SHELL32.dll,-17154"="打开文件夹以查看文件"
+"@%SystemRoot%\\system32\\SHELL32.dll,-17155"="Windows 资源管理器"
+"@%SystemRoot%\\system32\\SHELL32.dll,-17168"="不执行操作"
+"@%systemroot%\\System32\\wiaacmgr.exe,-276"="将图片复制到计算机上的一个文件夹"
+"@%systemroot%\\System32\\wiaacmgr.exe,-101"="Microsoft 扫描仪和照相机向导"
+"@%SystemRoot%\\system32\\SHELL32.dll,-17156"="查看图片的幻灯片"
+"@%SystemRoot%\\system32\\SHELL32.dll,-17157"="Windows 图片和传真查看器"
+"@%SystemRoot%\\system32\\SHELL32.dll,-17158"="打印此图片"
+"@%SystemRoot%\\system32\\SHELL32.dll,-17159"="照片打印向导"
+"@shell32.dll,-8504"="自动播放（&P)"
+"C:\\WINDOWS\\system32\\shimgvw.dll"="Windows 图片和传真查看器"
+"C:\\WINDOWS\\system32\\mspaint.exe"="画图"
+"C:\\PROGRA~1\\MICROS~2\\OFFICE11\\OIS.EXE"="Microsoft Office Picture Manager"
+"@shimgvw.dll,-550"="预览（&V)"
+"@C:\\WINDOWS\\system32\\shimgvw.dll,-303"="JPEG 图像"
+"C:\\WINDOWS\\system32\\zipfldr.dll"="Compressed (zipped) Folders"
+"C:\\DOCUME~1\\ADMINI~1\\LOCALS~1\\Temp\\Rar$EX00.765\\fo-ts312.exe"="TopStyle Pro Setup "
+"C:\\DOCUME~1\\ADMINI~1\\LOCALS~1\\Temp\\is-DONLV.tmp\\is-VQ0HA.tmp"="Setup/Uninstall"
+"C:\\DOCUME~1\\ADMINI~1\\LOCALS~1\\Temp\\Rar$EX00.657\\fo-ts312.exe"="TopStyle Pro Setup "
+"C:\\DOCUME~1\\ADMINI~1\\LOCALS~1\\Temp\\is-G2RO4.tmp\\is-A6NHJ.tmp"="Setup/Uninstall"
+"C:\\Program Files\\Bradbury\\TopStyle3\\TopStyle3.exe"="TopStyle"
+"D:\\Downloads\\editplus\\EditPlus-v2.30.Build.311.HH\\editplus.exe"="EditPlus 汉化版"
+"C:\\Program Files\\Microsoft Office\\OFFICE11\\EXCEL.EXE"="Microsoft Office Excel"
+"C:\\Program Files\\Microsoft Office\\OFFICE11\\MSPUB.EXE"="Microsoft Office Publisher"
+"C:\\Program Files\\UltraEdit\\Uedit32.exe"="UltraEdit-32 Professional Text/Hex Editor"
+"@C:\\Program Files\\NetMeeting\\conf.exe,-12345"="H.323 Internet 电话服务"
+"@C:\\WINDOWS\\system32\\accwiz.exe,-16"="辅助功能向导设置"
+"@C:\\WINDOWS\\inf\\unregmp2.exe,-9909"="Windows Media 音频/视频文件"
+"@C:\\WINDOWS\\inf\\unregmp2.exe,-9910"="Windows Media 音频/视频播放列表"
+"@C:\\WINDOWS\\inf\\unregmp2.exe,-9904"="AU 格式声音"
+"@C:\\WINDOWS\\system32\\SHELL32.dll,-22978"="公文包"
+"@C:\\WINDOWS\\System32\\ntbackup.exe,-40"="Windows 备份文件"
+"@C:\\WINDOWS\\System32\\pdh.dll,-10023"="性能监视器文件"
+"@C:\\WINDOWS\\system32\\shimgvw.dll,-304"="BMP 图像"
+"@C:\\WINDOWS\\System32\\cryptext.dll,-6145"="安全编录"
+"@C:\\WINDOWS\\inf\\unregmp2.exe,-9918"="CD 音频曲目"
+"@C:\\WINDOWS\\System32\\cdfview.dll,-4610"="频道文件"
+"@C:\\WINDOWS\\System32\\cryptext.dll,-6108"="安全证书"
+"@C:\\Program Files\\NetMeeting\\conf.exe,-12346"="快速拨号"
+"@C:\\WINDOWS\\System32\\cryptext.dll,-6110"="证书吊销列表"
+"@C:\\WINDOWS\\system32\\netshell.dll,-1300"="拨号网络文件"
+"@C:\\WINDOWS\\inf\\unregmp2.exe,-9927"="Microsoft 录制的电视节目"
+"@C:\\WINDOWS\\system32\\shimgvw.dll,-301"="EMF 图像"
+"@C:\\WINDOWS\\system32\\shimgvw.dll,-302"="GIF 图像"
+"@C:\\Program Files\\NetMeeting\\conf.exe,-12347"="Intel IPhone 兼容"
+"@C:\\WINDOWS\\System32\\setupapi.dll,-2000"="安装信息"
+"@C:\\Program Files\\Internet Explorer\\Connection Wizard\\icwres.dll,-20003"="Internet 通讯设置"
+"@C:\\WINDOWS\\System32\\wshext.dll,-4804"="JScript Script File"
+"@C:\\WINDOWS\\System32\\wshext.dll,-4805"="JScript Encoded Script File"
+"@C:\\WINDOWS\\inf\\unregmp2.exe,-9902"="电影剪辑"
+"@C:\\WINDOWS\\inf\\unregmp2.exe,-9926"="M3U 文件"
+"@C:\\WINDOWS\\inf\\unregmp2.exe,-9907"="MIDI 序列"
+"@C:\\WINDOWS\\inf\\unregmp2.exe,-9925"="MP3 格式声音"
+"@C:\\WINDOWS\\system32\\mmcbase.dll,-130"="Microsoft 通用管理文档"
+"@C:\\WINDOWS\\System32\\msi.dll,-34"="Windows Installer软件包"
+"@C:\\WINDOWS\\System32\\msi.dll,-35"="Windows Installer 修补程序"
+"@C:\\WINDOWS\\System32\\RCBdyctl.dll,-150"="Microsoft 远程访问事件"
+"@C:\\Program Files\\Movie Maker\\wmm2res.dll,-63097"="Windows Movie Maker 项目"
+"@C:\\WINDOWS\\PCHealth\\HelpCtr\\Binaries\\msinfo.dll,-391"="MSInfo 文档"
+"@C:\\Program Files\\NetMeeting\\nmwb.dll,-1234"="Microsoft NetMeeting T126 兼容白板文档"
+"@C:\\WINDOWS\\System32\\cryptext.dll,-6111"="PKCS #7 证书"
+"@C:\\WINDOWS\\System32\\cryptext.dll,-6113"="PKCS #7 签名"
+"@C:\\WINDOWS\\system32\\shimgvw.dll,-305"="PNG 图像"
+"@C:\\WINDOWS\\System32\\scrobj.dll,-8192"="Windows Script Component"
+"@C:\\WINDOWS\\system32\\shscrap.dll,-258"="片段对象"
+"@C:\\WINDOWS\\System32\\cryptext.dll,-6112"="Microsoft 系列证书存储"
+"@C:\\WINDOWS\\System32\\cryptext.dll,-6109"="证书信任列表"
+"@C:\\WINDOWS\\System32\\wshext.dll,-4803"="VBScript Encoded Script File"
+"@C:\\WINDOWS\\System32\\wshext.dll,-4802"="VBScript Script File"
+"@C:\\WINDOWS\\inf\\unregmp2.exe,-9908"="波形声音"
+"@C:\\WINDOWS\\inf\\unregmp2.exe,-9911"="Windows Media 音频快捷方式"
+"@C:\\WINDOWS\\inf\\unregmp2.exe,-9912"="Windows Media 音频文件"
+"@C:\\WINDOWS\\inf\\unregmp2.exe,-9920"="Windows Media Player 下载软件包"
+"@C:\\WINDOWS\\system32\\shimgvw.dll,-307"="WMF 图像"
+"@C:\\WINDOWS\\inf\\unregmp2.exe,-9915"="Windows Media Player 外观文件"
+"@C:\\WINDOWS\\inf\\unregmp2.exe,-9914"="Windows Media 音频/视频文件"
+"@C:\\WINDOWS\\inf\\unregmp2.exe,-9916"="Windows Media Player 外观程序包"
+"@C:\\WINDOWS\\inf\\unregmp2.exe,-9923"="Windows Media 播放列表"
+"@\"C:\\Program Files\\Windows NT\\Accessories\\WORDPAD.EXE\",-208"="写入文档"
+"@C:\\WINDOWS\\System32\\wshext.dll,-4801"="Windows Script File"
+"@C:\\WINDOWS\\System32\\wshext.dll,-4800"="Windows Script Host Settings File"
+"@C:\\WINDOWS\\inf\\unregmp2.exe,-9913"="Windows Media 音频/视频播放列表"
+"@C:\\WINDOWS\\system32\\msxml3r.dll,-1"="XML 文档"
+"@C:\\WINDOWS\\system32\\msxml3r.dll,-2"="XSL 样式表"
+"C:\\PROGRA~1\\FlashGet\\flashget.exe"="FlashGet"
+"D:\\yuanwei\\server\\tomcat\\bin\\startup.bat"="startup"
+"@netcfgx.dll,-50002"="允许您的计算机访问 Microsoft 网络上的资源。"
+"@netcfgx.dll,-50003"="允许其它计算机用 Microsoft 网络访问您的计算机上的资源。"
+"@netcfgx.dll,-50015"="质量服务数据包计划程序。该组件提供网络交通控制，包括流量率和优先级服务。"
+"@netcfgx.dll,-50001"="TCP/IP 是默认的广域网协议。它提供跨越多种互联网络的通讯。"
+"@shdoclc.dll,-880"="Internet Explorer"
+"@shdoclc.dll,-867"="每日提示（&T)"
+"@shdoclc.dll,-868"="显示每日提示。"
+"D:\\Downloads\\editplus\\UltraCompare_Pro_4.10a_SC.exe"="UltraCompare_Pro_4.10a_SC"
+"D:\\Program Files\\UltraCompare\\uc.exe"="UltraCompare Professional"
+"@C:\\WINDOWS\\system32\\SHELL32.dll,-22914"="包含信件，报告和其它文档以及文件。"
+"C:\\WINDOWS\\hh.exe"="Microsoft&reg; HTML Help Executable"
+"D:\\Downloads\\wom\\WoptiUtilities\\WoptiUtilities.exe"="Windows优化大师(Wopti Utilities)"
+"C:\\DOCUME~1\\ADMINI~1\\LOCALS~1\\Temp\\Rar$EX00.500\\StormCodec6.10.00.exe"="StormCodec6.10.00"
+"C:\\Program Files\\MPC\\StormSet.exe"="StormSet"
+"@shell32.dll,-21779"="图片收藏"
+"@shell32.dll,-21790"="我的音乐"
+"D:\\doc\\chm\\《黄易全集》典藏版.exe"="eBook 阅读器"
+"@inetcplc.dll,-4746"="辅助功能"
+"@inetcplc.dll,-4731"="始终扩展图像的说明文字"
+"@inetcplc.dll,-4732"="随焦点（或选择）的更改移动系统插入标记"
+"@inetcplc.dll,-4745"="浏览"
+"@inetcplc.dll,-4852"="使用直接插入自动完成功能"
+"@inetcplc.dll,-4856"="启用个性化收藏夹菜单"
+"@inetcplc.dll,-4866"="强制屏幕外合成，即便是在终端服务器下（需要重启动）"
+"@inetcplc.dll,-4833"="显示友好 HTTP 错误信息"
+"@inetcplc.dll,-4734"="显示友好的 URL"
+"@inetcplc.dll,-4743"="使用被动 FTP（为防火墙和 DSL 调制解调器兼容性）"
+"@inetcplc.dll,-4737"="为 FTP 站点启用文件夹视图"
+"@inetcplc.dll,-4840"="在地址栏中显示“转到”按钮"
+"@inetcplc.dll,-4837"="自动检查 Internet Explorer 更新"
+"@inetcplc.dll,-4836"="启用即需安装（Internet Explorer)"
+"@inetcplc.dll,-4835"="下载完成后发出通知"
+"@inetcplc.dll,-4838"="关闭“历史记录”和“收藏夹”中所有未使用的文件夹（需要重启动）"
+"@inetcplc.dll,-4829"="允许页面转换"
+"@inetcplc.dll,-4861"="重新使用启动快捷方式的窗口"
+"@inetcplc.dll,-4736"="允许脱机项目按计划同步"
+"@xpsp2res.dll,-4892"="禁用脚本调试（其他）"
+"@xpsp2res.dll,-4891"="禁用脚本调试 (Internet Explorer)"
+"@inetcplc.dll,-4832"="显示每个脚本错误的通知"
+"@inetcplc.dll,-4735"="使用平滑滚动"
+"@inetcplc.dll,-4828"="给链接加下划线"
+"@inetcplc.dll,-4825"="始终"
+"@inetcplc.dll,-4827"="悬停"
+"@inetcplc.dll,-4826"="从不"
+"@inetcplc.dll,-4874"="启用第三方浏览器扩展（需要重启动）"
+"@inetcplc.dll,-4873"="对网页上的按钮和控件启用视觉样式"
+"@inetcplc.dll,-4839"="总是以 UTF-8 发送 URL （需要重启动）"
+"@inetcplc.dll,-4875"="启用即需安装（其它）"
+"@inetcplc.dll,-4747"="安全"
+"@inetcplc.dll,-4750"="关闭浏览器时清空 Internet 临时文件夹"
+"@inetcplc.dll,-4749"="不将加密的页面存入硬盘"
+"@xpsp2res.dll,-5710"="允许来自 CD 的活动内容在我的计算机上运行"
+"@inetcplc.dll,-4761"="检查发行商的证书吊销"
+"@inetcplc.dll,-4762"="检查下载的程序的签名"
+"@xpsp2res.dll,-5700"="允许活动内容在我的计算机上的文件中运行"
+"@inetcplc.dll,-4863"="启用集成 Windows 身份验证（需要重启动）"
+"@inetcplc.dll,-4756"="启动配置文件助理"
+"@xpsp2res.dll,-10505"="允许运行或安装软件，即使签名无效"
+"@inetcplc.dll,-4757"="在安全和非安全模式之间转换时发出警告"
+"@inetcplc.dll,-4759"="对无效站点证书发出警告"
+"@inetcplc.dll,-4752"="使用 SSL 2.0"
+"@inetcplc.dll,-4753"="使用 SSL 3.0"
+"@inetcplc.dll,-4760"="检查服务器证书吊销（需要重启动）"
+"@inetcplc.dll,-4758"="重定向提交的表单时发出警告"
+"@inetcplc.dll,-4754"="使用 TLS 1.0"
+"@inetcplc.dll,-4822"="HTTP 1.1 设置"
+"@inetcplc.dll,-4823"="使用 HTTP 1.1"
+"@inetcplc.dll,-4824"="通过代理连接使用 HTTP 1.1"
+"@inetcplc.dll,-4744"="多媒体"
+"@inetcplc.dll,-4741"="播放网页中的动画"
+"@inetcplc.dll,-4871"="启用自动图像大小调整"
+"@inetcplc.dll,-4865"="启用图像工具栏（需要重启动）"
+"@inetcplc.dll,-4742"="显示图片"
+"@inetcplc.dll,-4843"="显示图像下载占位符"
+"@inetcplc.dll,-4738"="智能图像抖动"
+"@inetcplc.dll,-4739"="播放网页中的声音"
+"@inetcplc.dll,-4740"="播放网页中的视频"
+"@inetcplc.dll,-4769"="打印"
+"@inetcplc.dll,-4770"="打印背景颜色和图像"
+"@inetcplc.dll,-4771"="从地址栏中搜索"
+"@inetcplc.dll,-4844"="搜索时"
+"@inetcplc.dll,-4845"="显示结果，然后转到最相近的站点"
+"@inetcplc.dll,-4847"="只在主窗口中显示结果"
+"@inetcplc.dll,-4846"="转到最相近的站点"
+"@inetcplc.dll,-4848"="不从地址栏中搜索"
+"D:\\Program Files\\PLSQL Developer\\plsqldev.exe"="PL/SQL Developer"
+"C:\\Program Files\\Microsoft Office\\OFFICE11\\POWERPNT.EXE"="Microsoft Office PowerPoint"
+"@C:\\WINDOWS\\system32\\mstsc.exe,-4001"="从远程位置连接到计算机的桌面并运行应用程序，如同您坐在其控制台前面。"
+"C:\\WINDOWS\\system32\\mstsc.exe"="Remote Desktop Connection"
+"d:\\Downloads\\ExeSetupFav.exe"="ExeSetupFav Microsoft 基础类应用程序"
+"C:\\WINDOWS\\system32\\YeskyComponents\\YComs.exe"="YComs Microsoft 基础类应用程序"
+"@C:\\WINDOWS\\system32\\SHELL32.dll,-32517"="任务栏和「开始」菜单"
+"@C:\\WINDOWS\\system32\\SHELL32.dll,-22985"="文件夹选项"
+"@C:\\WINDOWS\\system32\\SHELL32.dll,-22981"="字体"
+"@C:\\WINDOWS\\system32\\SHELL32.dll,-22982"="管理工具"
+"@C:\\WINDOWS\\system32\\mstask.dll,-3408"="任务计划"
+"@C:\\WINDOWS\\system32\\wiashext.dll,-331"="扫描仪和照相机"
+"@C:\\Program Files\\Internet Explorer\\iexplore.exe,-702"="Internet Explorer"
+"C:\\Program Files\\Bradbury\\TopStyle3\\unins000.exe"="Setup/Uninstall"
+"C:\\DOCUME~1\\ADMINI~1\\LOCALS~1\\Temp\\_iu14D2N.tmp"="Setup/Uninstall"
+"D:\\Downloads\\editplus\\TopStyle3\\TopStyle3\\TopStyle3.exe"="TopStyle"
+"D:\\yuanwei\\VStart\\VStart.exe"="音速启动 - 您的启动专家"
+"D:\\yuanwei\\VStart\\软件\\Mybase\\Mybase.exe"="Mybase"
+"C:\\Program Files\\MPC\\mplayerc.exe"="Media Player Classic"
+"C:\\Program Files\\Windows Media Player\\wmplayer.exe"="Windows Media Player"
+"C:\\Program Files\\MPC\\GSpot.exe"="GSpot Codec Information Appliance (tm)"
+"C:\\Program Files\\MSN Messenger\\msnmsgr.exe"="MSN Messenger"
+"C:\\Program Files\\Common Files\\Microsoft Shared\\OFFICE11\\MSOXMLED.EXE"="XML Editor"
+"C:\\Program Files\\Microsoft Office\\OFFICE11\\INFOPATH.EXE"="Microsoft Office InfoPath"
+"@shell32.dll,-30498"="文件和文件夹"
+"@shell32.dll,-30506"="记住每个文件夹的视图设置"
+"@shell32.dll,-30497"="在我的电脑上显示控制面板"
+"@shell32.dll,-30507"="在单独的进程中打开文件夹窗口"
+"@shell32.dll,-30517"="不缓存缩略图"
+"@shell32.dll,-30514"="在文件夹提示中显示文件大小信息"
+"@shell32.dll,-30511"="在资源管理器文件夹列表中显示简单文件夹查看"
+"@shell32.dll,-30499"="隐藏文件和文件夹"
+"@shell32.dll,-30501"="不显示隐藏的文件和文件夹"
+"@shell32.dll,-30500"="显示所有文件和文件夹"
+"@shell32.dll,-30503"="隐藏已知文件类型的扩展名"
+"@shell32.dll,-30509"="自动搜索网络文件夹和打印机"
+"@shell32.dll,-30513"="在登录时还原上一个文件夹窗口"
+"@shell32.dll,-30512"="用彩色显示加密或压缩的 NTFS 文件"
+"@shell32.dll,-30504"="在标题栏显示完整路径"
+"@shell32.dll,-30505"="在地址栏中显示完整路径"
+"@shell32.dll,-30502"="鼠标指向文件夹和桌面项时显示提示信息"
+"@shell32.dll,-30518"="使用简单文件共享 （推荐）"
+"@shell32.dll,-30508"="隐藏受保护的操作系统文件（推荐）"
+"@shell32.dll,-30510"="显示系统文件夹的内容"
+"@shell32.dll,-28964"="您已选择在 Windows 资源管理器中显示受保护的操作系统文件（标记为系统和隐藏的文件）。
+这些文件是启动和运行 Windows 所必需的。删除或编辑它们会使您的计算机无法运行。
+是否显示这些文件?"
+"C:\\WINDOWS\\regedit.exe"="Registry Editor"
+"@SHELL32.dll,-9227"="我的文档"
+标识特殊的文件夹图标
+IconResource=%SystemRoot%\system32\imageres.dll,-112
+这一行可以将系统文件夹《我的文档》的显示改成原系统图标
+更多的标识如下：
+-108 我的音乐
+-112 我的文档
+-113 我的图片
+-115 收藏夹
+-183 桌面
+-184 下载
+-185 链接
+-186 游戏
+-189 我的视频

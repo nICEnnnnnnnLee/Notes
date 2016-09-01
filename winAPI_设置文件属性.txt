@@ -1,0 +1,12 @@
+DWORD SetHiddenAndReadonly(LPSTR szFilename)
+{
+	//获取原来的文件属性
+	DWORD dwFileAttrs=GetFileAttributes(szFilename);
+	dwFileAttrs|=FILR_ATTRIBUTE_READONLY;
+	dwFileAttrs|=FILR_ATTRIBUTE_HIDDEN;
+	if(SetFileAttrbutes(dwFileAttrs)){
+		printf("文件%s属性设置成功\n",szFilename);
+	}else{
+		printf("文件%s属性设置失败\n",szFilename);
+	}
+}

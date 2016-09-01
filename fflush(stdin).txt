@@ -1,0 +1,4 @@
+fflush(stdin)刷新标准输入缓冲区，把输入缓冲区里的东西丢弃
+但是fflush(stdin)在linux里并没有实现，这是要通过，while ( (ch=getchar()) != '/n' && ch != EOF );来实现。
+ 
+　　fflush(stdout)刷新标准输出缓冲区，把输出缓冲区里的东西打印到标准输出设备上

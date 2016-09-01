@@ -1,0 +1,322 @@
+http://blog.chinaunix.net/uid-8416261-id-2462824.html
+
+有时候人们往往会为了一个程序的启动而头痛，因为一些用户往往不知道那些文件是如何启动的。所以经常会有些没用的东西挂在系统上占用资源。有时候也会有人因为不知道如何启动某个文件而头痛。更有些特洛依木马的作者因为不清楚系统的自启动方式而使自己的木马轻松被别人发现……  
+ Windows的自启动方式其实有许多方式。除了一些常见的启动方式之外，还有一些非常隐蔽的可用来启动文件的方式。本文总结如下，虽然不是全部，但我想应该会对大家有所帮助。文章全部以系统默认的状态为准，以供研究。 
+ 其中（English）代表英文操作系统，（Chinese）代表中文操作系统。本文没加说明指的全为中文Windows98操作系统。  
+ 警告： 文中提及的一些操作可能会涉及到系统的稳定性。例如如果不正确地使用注册表编辑器可以导致可能重新安装系统这样严重的问题。微软也不能保证因不正常使用注册表编辑器而造成的结果可以被解决。笔者不对使用后果负责，请根据自己的情况使用。  
+ Windows的自启动方式：
+ 一.自启动目录：  
+ 1.第一自启动目录：
+ 默认路径位于：
+ C:windowsstart menuprogramsstartup（English）
+ C:windowsstart menuprograms启动（Chinese）
+ 这是最基本、最常用的Windows启动方式，主要用于启动一些应用软件的自启动项目，如Office的快捷菜单。一般用户希望启动时所要启动的文件也可以通过这里启动，只需把所需文件或其快捷方式放入文件夹中即可。
+对应的注册表位置：
+ [HKEY_CURRENT_USERSoftwareMicrosoftWindowsCurrentVersionExplorerShell Folders]
+ Startup=\"%Directory%\"
+ [HKEY_CURRENT_USERSoftwareMicrosoftWindowsCurrentVersionExplorerUser Shell Folders]
+ Startup=\"%Directory%\"
+ 其中“%Directory%”为启动文件夹位置。
+ 
+ 英文默认为：  C:windowsstart menuprogramsstartup
+ 中文默认为：  C:windowsstart menuprograms启动  
+ 在开始菜单的“启动”文件夹是可更改的，如果用户更改了启动文件夹，则以上注册表的键值均会改变为相应的名称。 ?
+ 值得注意的是：开始菜单的“启动”文件夹中的内容虽然在默认的状态下可以被用户看得一清二楚。但通过改动还是可以达到相当隐蔽地启动的目的的：  
+ 首先，“启动”文件夹中的快捷方式或其他文件的属性可以改变为“隐藏”。这样可以达到系统不启动被隐藏的文件，等到需要启动的时候又可以通过更改回文件属性而恢复启动的作用。
+其次，其实“启动”文件夹只是一个普通的文件夹，但是由于系统监视了这个文件夹，所以变得有些特殊，但文件夹有的功能该文件夹也是有的。譬如“启动”文件夹的名称是可以更改的，并且“启动”文件夹也可以设置属性。如果把属性设置为“隐藏”，则在系统中的【开始】?【程序】菜单中是看不到“启动”文件夹的（即使在“文件夹选项”中已经设定了“显示所有文件”）。而系统还会启动这个被隐藏的文件夹中的非隐藏文件。
+ 敏感的人们也许已经发现问题。举一个例子：  
+ 如果我想启动A木马的server端服务器，我可以把原来的“启动”菜单的名称更改为“StartUp”（这里是随便改的，注册表相应的键值也会自动更改。）之后再创建一个名为“启动”的文件夹，把“StartUp”菜单中的文件全部复制（这里用复制，可以骗过用户的检查）到“启动”菜单中，然后把A木马的server程序放入“StartUp”文件夹中，最后把“StartUp”文件夹隐藏。大功告成！
+ 
+ 从外表看来，用户的【开始】?【启动】目录还在，而且要启动的文件也在。但系统此时启动的文件不是名为“启动”的文件夹中的文件，而是名为“StartUp”的文件夹中的文件。如果木马做的好的话，完全可以在每次启动的时候把“StartUp”中的文件复制到“启动”目录中来达到实时更新启动目录的目的。由于“StartUp”文件夹被隐藏，从【开始】?【程序】中是无法看到真正的启动菜单“StartUp”的，所以达到了隐蔽启动的目的！
+ 这个启动方式虽然比较隐蔽，但通过msconfig依旧可以在“启动”页中看出来。 
+ 2.第二自启动目录：
+ 是的，其实，Windows还有另外一个自启动目录，而且很明显但却经常被人们忽略的一个。
+ 该路径位于：
+ C:WINDOWSAll UsersStart MenuProgramsStartUp（English）
+ C:WINDOWSAll UsersStart MenuPrograms启动（Chinese）
+ 这个目录的使用方法和第一自启动目录是完全一样的。只要找到该目录，将所需要启动的文件拖放进去就可以达到启动的目的。
+ [HKEY_LOCAL_MACHINESoftwareMicrosoftWindowsCurrentVersionexplorerUser Shell Folders]
+ \"Common Startup\"=\"%Directory%\"
+ [HKEY_LOCAL_MACHINESoftwareMicrosoftWindowsCurrentVersionexplorerShell Folders]
+ \"Common Startup\"=\"%Directory%\"
+ 
+ 值得注意的是：该目录在开始菜单的“启动”目录中是完全不能被看见的。而伴随着每次启动，该目录下的非隐藏文件也会随之启动！ 另外，在Msconfig中可以看到在这个目录下要启动的文件。
+二.系统配置文件启动：  
+ 由于系统的配置文件对于大多数的用户来说都是相当陌生的；这就造成了这些启动方法相对来说都是相当隐蔽的，所以这里提到的一些方法常常会被用于做一些破坏性的操作，请读者注意。  
+ 1.WIN.INI启动：
+ 启动位置（file.exe为要启动的文件名称）：
+ [windows]
+ load=file.exe
+ run=file.exe
+ 注意：load=与run=的区别在于：通过load=运行文件，文件会在后台运行（最小化）；而通过run=来运行，则文件是在默认状态下被运行的。  
+ 2.SYSTEM.INI启动：
+ 启动位置（file.exe为要启动的文件名称）：
+ 默认为：
+ [boot]
+ Shell=Explorer.exe
+ 可启动文件后为：
+ [boot]
+ Shell=Explorer.exe file.exe
+ 说明：
+ 笔者记得在诺顿先生（就是开发出Norton系列软件的人）写的一本书里面曾经说过，1、2这两个文件的有无对系统没有什么影响，但由于时间的关系，笔者没有来得及试验，有兴趣者可以试一试。  
+ 不过有一点是可以肯定的，这样的启动方式往往会被木马或一些恶作剧程序（如，妖之吻）利用而导致系统的不正常。由于一般用户很少会对这两个文件关心，甚至有的人不知道这些文件是做什么用的，所以隐蔽性很好。但由于其使用的越来越频繁，这种启动方式也被渐渐的察觉了。用户可以使用msconfig这个命令实现检查是否有什么程序被加载。具体的是在看是菜单中的“运行”中输入msconfig回车，之后按照文字说明即可。
+ 
+ 注意：
+ 1. 和WIN.INI文件不同的是，SYSTEM.INI的启动只能启动一个指定文件，不要把Shell=Explorer.exe file.exe换为Shell=file.exe，这样会使Windows瘫痪！
+ 2. 这种启动方式提前于注册表启动，所以，如果想限制注册表中的文件的启动，可是使用这种方法。
+ 3.WININIT.INI启动：
+ Wininit.ini这个文件也许很多人不知道，一般的操作中用户也很少能直接和这个文件接触。但如果你编写过卸载程序的话，也许你会知道这个文件。
+ WinInit即为Windows Setup Initialization Utility。翻译成中文就是Windows安装初始化工具。这么说也许不明白，如果看到如下提示信息：
+ Please wait while Setup updates your configuration files.
+ This may take a few minutes...
+ 大家也许就都知道了！这个就是Wininit.ini在起作用！  
+ 由于在Windows下，许多的可执行文件和驱动文件是被执行到内存中受到系统保护的。所以在Windows的正常状态下更改这些文件就成了问题，因此出现了Wininit.ini这个文件来帮助系统做这件事情。它会在系统装载Windows之前让系统执行一些命令，包括复制，删除，重命名等，以完成更新文件的目的。Wininit.ini文件存在于Windows目录下，但在一般时候我们在C:Windows目录下找不到这个文件，只能找到它的exe程序Wininit.exe。原因就是Wininit.ini在每次被系统执行完它其中的命令时就会被系统自动删除，直到再次出现新的Wininit.ini文件……之后再被删除。
+文件格式：
+ [rename]
+ file1=file2
+ file1=file2的意思是把file2文件复制为文件名为file1的文件，相当于覆盖file1文件。
+ 这样启动时，Windows就实现了用file2更新file1的目的；如果file1不存在，实际结果是将file2复制并改名为file1；如果要删除文件，则可使用如下命令：
+ [rename]
+ nul=file2?
+ 这也就是说把file2变为空，即删除的意思。
+ 以上文件名都必须包含完整路径。
+ 
+ 注意：
+ 1.由于Wininit.ini文件处理的文件是在Windows启动以前处理的，所以不支持长文件名。
+ 2.以上的文件复制、删除、重命名等均是不提示用户的情况下执行的。有些病毒也会利用这个文件对系统进行破坏，所以用户如果发现系统无故出现：
+ Please wait while Setup updates your configuration files.
+ This may take a few minutes...
+ 那么也许系统就有问题了。
+ 3. 在Windows 95 Resource Kit中提到过Wininit.ini文件有三个可能的段，但只叙述了[rename]段的用法。
+ 4.WINSTART.BAT启动：
+ 这是一个系统自启动的批处理文件，主要作用是处理一些需要复制、删除的任务。譬如有些软件会在安装或卸载完之后要求重新启动，就可以利用这个复制和删除一些文件来达到完成任务的目的。如：
+ “@if exist C:WINDOWSTEMPPROC.BAT call C:WINDOWSTEMPPROC.BAT”
+ 这里是执行PROC.BAT文件的命令；
+ “call filename.exe > nul”
+ 这里是去除任何在屏幕上的输出。
+ 值得注意的是WinStart.BAT文件在某种意义上有和AUTOEXEC.BAT一样的作用。如果巧妙安排完全可以达到修改系统的目的！
+ 5.AUTOEXEC.BAT启动： 这个就没的说了，应该是用户再熟悉不过的系统文件之一了。每次重新启动系统时在DOS下启动。恶意的程序往往会利用这个文件做一些辅助的措施。 
+ 不过，在AUTOEXEC.BAT文件中会包含有恶意代码。如format c: /y等；由于BAT恶意程序的存在，这个机会大大地增加了。譬如最近很流行的SirCam蠕虫也利用了Autoexec.bat文件。
+ 说明： 4、5这两个文件都是批处理文件，其作用往往不能完全写出来，因为批处理的用处在DOS时代的应用太广泛，它的功能相对来说也是比较强大。想利用这两个文件，需要对DOS有一定的了解。.
+ 
+ 三.注册表启动：  
+ 注册表中的启动应该是被使用最频繁的启动方式，但这样的方式也有一些隐蔽性较高的方法，大致有三种。
+ 
+ 1.常规启动：
+ 其中%path%为任意路径，file.exe为要运行的程序。
+ [HKEY_LOCAL_MACHINESoftwareMicrosoftWindowsCurrentVersionRunServices]
+\"Anything\"=\"%path%file.exe\"
+ [HKEY_LOCAL_MACHINESoftwareMicrosoftWindowsCurrentVersionRunServicesOnce]
+ \"Anything\"=\"%path%file.exe\"
+ [HKEY_LOCAL_MACHINESoftwareMicrosoftWindowsCurrentVersionRun]
+ \"Anything\"=\"%path%file.exe\"
+ [HKEY_LOCAL_MACHINESoftwareMicrosoftWindowsCurrentVersionRunOnce]
+ \"Anything\"=\"%path%file.exe\"
+ 
+ [HKEY_CURRENT_USERSoftwareMicrosoftWindowsCurrentVersionRun]
+  \"Whatever\"=\"c:runfolderprogram.exe\"
+ [HKEY_CURRENT_USERSoftwareMicrosoftWindowsCurrentVersionRunOnce]
+  \"Whatever\"=\"c:runfolderprogram.exe\"
+ 注意：
+ (1).如果需要运行.dll文件，则需要特殊的命令行。
+ 如：
+ Rundll32.exe C:WINDOWSFILE.DLL,Rundll32
+ (2).解除这里相应的自启动项只需删除该键值即可，但注意不要删除如SystemTray、ScanRegistry等这样的系统键值。
+ (3).如果只想不启动而保留键值，只需在该键值加入rem即可。如：
+ “rem?C:Windowsa.exe”
+ (4).在注册表中的自启动项中没有这项：
+ [HKEY_CURRENT_USER SoftwareMicrosoftWindowsCurrentVersionRunServices]
+ (5).Run和RunServices的区别在于：Run中的程序是在每次系统启动时被启动，RunServices则是会在每次登录系统时被启动。
+ 关于：
+ [HKEY_LOCAL_MACHINESOFTWAREMicrosoftWindowsCurrentVersionRunOnceEx]
+ 
+ 有特殊的语法：
+ 例如，运行notepad.exe
+ HKLMSOFTWAREMicrosoftWindowsCurrentVersionRunOnceEx
+ \"Title\"=\"My Setup Title\"
+ \"Flag\"=dword:00000002
+ 
+ HKLMSOFTWAREMicrosoftWindowsCurrentVersionRunOnceEx001
+ \"RunMyApp\"=\"||notepad.exe\"
+ 语法为：
+ HKLMSOFTWAREMicrosoftWindowsCurrentVersionRunOnceEx
+ Flags = 0x0000000
+ Title = \"Status Dialog Box Title\"
+ 
+ HKLMSOFTWAREMicrosoftWindowsCurrentVersionRunOnceExDepend
+ 0001 = \"xxx1\"
+ 000X = \"xxxx\"
+ 
+ HKLMSOFTWAREMicrosoftWindowsCurrentVersionRunOnceEx001
+ Entry1 = \"MyApp1.exe\"
+ EntryX = \"MyApp2.exe\"
+ HKLMSOFTWAREMicrosoftWindowsCurrentVersionRunOnceEx00x
+ ...
+ 注意：
+ (1).“xxx1，xxxx”是一个动态链接库（DLL）或.OCX文件名（如My.ocx或My.dll）。
+(2).“0001，000x”是部分名字。可以是数字和文字。
+ (3).“entry1，entryX”是指向一个要运行的程序文件的注册表串值。
+ 键值的说明：
+ Flags是一个定位在RunOnceEx键用来激活/禁止的DWORD值，具体如下：
+ 值 功能 功能定义
+ 0x00000000 默认 所有功能被禁止
+ 0x00000004 检查壳状况 打开壳的读写校验准备接受OLE命令
+ 0x00000008 无报错对话 错误对话框不显示
+ 0x00000010 创建错误报告文件 创建 C:WindowsRunOnceEx.err 文件如果有错误出现
+ 0x00000020 创建执行报告文件 创建一个有命令状态的C:WindowsRunOnceEx.log文件
+ 0x00000040 无例外限制 当注册DLL时不限制例外
+ 0x00000080 无状态对话 当RunOnceEx运行时状态对话框不显示
+ 
+ 由于涉及篇幅较多，具体做法请浏览微软网页：
+ http://support.microsoft.com/support/kb/articles/Q232/5/09.ASP
+ 
+ 2.特殊启动1：
+ 在注册表中除了上述的普通的启动方式以外，还可以利用一些特殊的方式达到启动的目的：
+ [HKEY_CLASSES_ROOTexefileshellopencommand] @=\"%1\" %*
+ [HKEY_CLASSES_ROOTcomfileshellopencommand] @=\"%1\" %*
+ [HKEY_CLASSES_ROOTbatfileshellopencommand] @=\"%1\" %*
+ [HKEY_CLASSES_ROOThtafileshellopencommand] @=\"%1\" %*
+ [HKEY_CLASSES_ROOTpiffileshellopencommand] @=\"%1\" %*
+ [HKEY_LOCAL_MACHINESoftwareCLASSESbatfileshellopencommand] @=\"%1\" %*
+ [HKEY_LOCAL_MACHINESoftwareCLASSEScomfileshellopencommand] @=\"%1\" %*
+ [HKEY_LOCAL_MACHINESoftwareCLASSESexefileshellopencommand] @=\"%1\" %*
+ [HKEY_LOCAL_MACHINESoftwareCLASSEShtafileshellopencommand] @= \"%1\" %*
+ [HKEY_LOCAL_MACHINESoftwareCLASSESpiffileshellopencommand] @=\"%1\" %*
+ 
+ 其实从注册表的路径上也许就隐约可以看出，这些都是一些经常被执行的可执行文件的键值。往往有些木马是可以更改这些键值从而达到加载的目的：
+ 如果我把“”%1”%*”改为“file.exe”%1”%*”则文件file.exe就会在每次执行某一个类型的文件（要看改的是哪一个文件类型）的时候被执行！ 当然，可以被更改的不一定只是可执行文件，譬如冰河就利用了TXT文件的键值：
+ [HKEY_CLASSES_ROOTtxtfileshellopencommand]实现木马的一种启动方式。
+ 
+ 3.特殊启动2：
+在注册表中：
+ HKEY_LOCAL_MACHINESystemCurrentControlSetServicesVxD
+ 的位置上有这样的地址。该地址是系统启动VxD驱动文件放置的地址，就像PrettyPark这个蠕虫一样，可以建立一个主键之后把VxD文件添加到注册表中在这里。
+ 注意：不可以直接把一个EXE文件改名为VxD文件，需要另外进行编程，生成的VxD文件。
+ 
+ 4.其他启动方式：  
+ (一).C:Explorer.exe启动方式：
+ 这是一种特殊的启动方式，很少有人知道。
+ 在Win9X下，由于SYSTEM.INI只指定了Windows的外壳文件EXPLORER.EXE的名称，而并没有指定绝对路径，所以Win9X会搜索EXPLORER.EXE文件。
+ 搜索顺序如下：
+ (1). 搜索当前目录。
+ (2). 如果没有搜索到EXPLORER.EXE则系统会获取
+ [HKEY_LOCAL_MACHINESYSTEMCurrentControlSetControlSession ManagerEnvironmentPath]的信息获得相对路径。
+ (3). 如果还是没有文件系统则会获取[HKEY_CURRENT_USEREnvironmentPath]的信息获得相对路径。  
+ 其中：
+ [HKEY_LOCAL_MACHINESYSTEMCurrentControlSetControlSession ManagerEnvironmentPath]和[HKEY_CURRENT_USEREnvironmentPath]所保存的相对路径的键值为：“%SystemRoot%System32;%SystemRoot%”和空。
+ 所以，由于当系统启动时，“当前目录”肯定是%SystemDrive%（系统驱动器），这样系统搜索EXPLORER.EXE的顺序应该是：
+ (1). %SystemDrive%（例如C:）
+ (2). %SystemRoot%System32（例如C:WINNTSYSTEM32）
+ (3). %SystemRoot%（例如C:WINNT）
+ 此时，如果把一个名为EXPLORER.EXE的文件放到系统根目录下，这样在每次启动的时候系统就会自动先启动根目录下的EXPLORER.EXE而不启动Windows目录下的EXPLORER.EXE了。
+ 在WinNT系列下，WindowsNT/Windows2000更加注意了EXPLORER.EXE的文件名放置的位置，把系统启动时要使用的外壳文件（EXPLORER.EXE）的名称放到了：
+ [HKEY_LOCAL_MACHINESOFTWAREMicrosoftWindowsNTCurrentVersionWinlogonShell]
+ 这个位置。
+ 作为默认这个位置是不存在的，默认为是Explorer.exe。
+ 具体请参考：http://www.microsoft.com/technet/security/bulletin/fq00-052.asp
+ 注意：
+ 一定要确定根目录下的EXPLORER.EXE要能启动Windows目录下的EXPLORER.EXE，否则会导致Windows无法启动！
+ 现在流行的病毒CodeRed就会在C:和D:目录下放置两个约8KB的EXPLORER.EXE的文件！
+ 在Windows 2000 SP2中微软已经更改了这一方式。
+(二).屏幕保护启动方式：
+ Windows的屏幕保护程序是一个.scr文件。这是一个PE格式的可执行文件。如果把屏幕保护程序.scr更名为.exe的文件，则该程序仍然可以正常启动。类似的.exe文件更名为.scr文件也是一样可以被运行！
+ .scr文件默认存在于C:Windows目录中，他的名字就是在“显示”属性中的“屏幕保护程序”中的名称。在C:Windows目录下的所有*.scr文件都会被Windows的“屏幕保护程序”显示，而文件路径本身保存在System.ini中的SCRNSAVE.EXE=的这条中。有意思的是在SCRNSAVE.EXE=这条中，其规定的路径也包含了目录名称。即如果我想安装一个.scr文件时，譬如安装路径为D:SCR1.scr，而D:SCR这个目录中还有2.scr，则在这个目录中的所有.scr（1.scr，2.scr）文件都会被显示在“屏幕保护程序”设置中。如果屏幕保护程序设为“（无）”，则SCRNSAVE.EXE=这条不存在。但如果SCRNSAVE.EXE=这条所指的文件或目录是错误的，则在“屏幕保护程序设置”中仍然会显示“（无）”。
+ 
+ 屏幕保护程序的启动时间保存在注册表中的这个位置上：
+ HKEY_USERS.DEFAULTControl PaneldesktopScreenSaveTimeOut
+ 时间单位为秒，不过虽然是秒，可启动时间却为分，即从60秒开始记录，如果记录时间小于60秒，则自动定为1分钟。
+ 屏幕保护是否设置密码的键值为：
+ HKEY_USERS.DEFAULTControl PaneldesktopScreenSaveUsePassword
+ 有密码则值为1没有密码则值为0。
+ 由此可见，如果有人把自己所作的.exe程序更名为.scr的程序，并使程序能够在SYSTEM.INI中添加“SCANSAVE.EXE=/%Path%”f/ile.scr”（/%Path%/file.scr为所需要设置的文件的路径和文件名，如C:Program filestrojan.scr），修改注册表中的HKEY_USERS.DEFAULTControl PaneldesktopScreenSaveTimeOut，定时间为60，则系统只要闲置一分钟该文件就会被启动！
+ 另外一个简单的破坏方式就是可以随机产生屏幕保护密码并写入相应文件的相应位置，定时间为1分钟，则系统只要闲置一分钟则会被被锁！（由于涉及问题并非自启动问题，所以不加以讨论。）
+ 注意：由于SCANSAVE.EXE=这里还会定义.scr文件的路径，所以最好不要把要启动的文件放置在.scr文件较多的一些目录，否则容易引起怀疑。（Windows目录除外） （三）.依附启动：
+ 这类启动方式已经有几分类似病毒了。这种方法是利用病毒的传染机制把要启动的EXE文件附着在另外的一个和多个EXE文件上，从而达到启动这个EXE文件就可以启动要启动的文件的目的。记得1999年YAI这个木马流行的时候，它就使用了依附一个EXE文件而达到启动的目的，但是由于BUGS和方式问题该木马的破坏作用却体现在了它“病毒”的一面。
+使用这种启动方法一定要注意不能破坏EXE文件（否则会很容易被发现），而且最好把木马定位在固定的一个或者几个EXE文件上。如：IEXPLORE.EXE（IE的EXE文件），RNAPP.EXE（拨号网络的EXE文件）等等。
+ 注意：这种方法的使用比较危险，技术上也需要相当功底，而且和病毒的距离很近，慎用。
+ 
+ （四）.计划任务启动方式：
+ Windows的计划任务是Windows的一个预置实现某些操作而使用的一个功能。但是如果利用这个功能也是能够实现自启动的目的的！由于很多电脑都会自动加载“计划任务”所以隐蔽性相对不错。
+ 
+ 在Windows默认的情况下，计划任务是一个个保存在C:WindowsTasks目录下的.job文件。.job文件里包括了启动方式、文件路径等一系列的信息。编制出或者使软件自己可以写出.job文件，则是关键。之后在相关地方写入标记启动即可。
+ 由于时间关系，这个方法没有来得及试验，读者可以自己试验一下。
+ （五）.AutoRun.inf启动方式：
+ Autorun.inf这个标识也许大家都见过。是的，这个最常出现在光盘中，用于光盘自启动。每次把光盘放入光驱中的时候，系统会通过这个文件来决定是否自动启动光盘。但是有没有想过，这个文件也可以用来自启动一些文件！
+ Autorun.inf的内容通常是：
+ [AUTORUN]
+ OPEN=file.exe
+ ICON=icon.ico
+ 
+ OPEN中是插入光盘或者双击光盘盘符就会运行的可执行文件的名称。
+ ICON中是该光驱驱动器的图标文件。该文件可以是其他文件。如：
+ [AUTORUN]
+ OPEN=file.exe
+ ICON=icon.exe,2
+ 其中icon.exe是一个有图标文件的可执行文件，“,2”则是该文件中的第3个图标。（“,0”是第一个图标，无数字则默认为第一个图标）。
+ 最关键的是该Autorun.inf文件是可以被用在硬盘的驱动器上的。也就是说，如果把光盘上的所有文件及目录原封不动的复制到某一硬盘的根目录下，则双击盘符会出现自动运行文件！
+ 如果是木马的话，打一个比方：一个木马如果执行后被命名为aaa.exe放置在C:Windows目录下。那么该木马可以生成一个autorun.inf
+ 文件于C:下，内容如下： [AUTORUN]
+ OPEN=Windowsaaa.exe
+ ICON=aaa.exe
+ 这样的话，盘符图标为aaa.exe的第一个图标文件。则在每次双击C盘的时候都会执行aaa.exe文件了。但要注意的是，aaa.exe文件
+ 最好能够打开C盘目录。（比较容易伪装）
+ 注意：
+ （1）.autorun.inf的属性被改为隐藏后仍可以正常使用。
+ （2）.autorun.inf中的路径对相对路径和绝对路径都是可以实现的。也就是说，如果autorun.inf被放在1盘符下，也可以2盘符上的文件！如：
+如果把autorun.inf文件放在C盘根目录下，内容为
+ [AUTORUN]
+ OPEN=D:CCCbbb.exe
+ ICON=bbb.exe
+ 则这时如果双击C盘则可以执行D盘CCC目录上的bbb.exe文件！
+ （3）.如果没有OPEN项目，则系统不执行任何文件，而去执行下一个命令。
+ （4）.如果没有ICON项目，则该盘符的图标为原Windows盘符图标，但如果有ICON项却设置错误，或者所设置的文件没有图标，则系统会显示为默认的空白图标。
+ （5）.自动启动相关：
+ a.代启动：
+ 这种启动方式其实只是一个方法的问题。即可以用启动一个正常文件来启动另一个文件，SubSeven就用过启动Windos.exe从而启动SubSeven的Sever文件的方法。
+ b.Start启动：
+ 在“运行“中或“MS-DOS”方式中输入start回车，则会显示
+ Runs a Windows program or an MS-DOS program.  
+ START [options] program [arg...]
+ START [options] document.ext  
+ /m[inimized] Run the new program minimized (in the background).
+ /max[imized] Run the new program maximized (in the foreground).
+ /r[estored]?Run the new program restored (in the foreground). [default]
+ /w[ait] ?Does not return until the other program exits.
+ 如果要启动的程序配合这个命令，则可以更加隐蔽，如：
+ start/m file.exe
+ 但似乎有些有启动画面的软件（如金山词霸）对这条命令并没有反映。
+ 
+ c.控制面板启动：
+ 这是利用控制面板程序可以被类似DLL执行，从而达到启动目的。
+ 在控制面板中，.cpl文件是控制面板的原文件。默认的这些文件都会被放置在/％WINDOWS％/SYSTEM/目录下的，如desk.cpl是桌面属性、inetcpl.cpl是Internet选项之类。但这些.cpl文件全都是PE格式文件，也就是说如果用户把一个可执行的类似DLL的.cpl文件放入%Windows%System中，则在控制面板中可看到其图标，并可执行！
+ 
+ 由于.cpl文件的特殊性，需要使用rundll32.exe来启动该文件。rundll32.exe是Windows用来调用动态连接库函数时所使用的文件，在运行中输入： rundll32 shell32.dll,Control_RunDLL /%path%/desk.cpl,,X
+ 其中shell32.dll为被调用的DLL文件，意思为调用shell32.dll中的Control_RunDLL来打开desk.cpl文件；/%path%/为.cpl文件的路径，默认为C:WindowsSystem；最后的X为desk.cpl文件的页数：从0开始，0为第一页（如“显示属性”的“背景”），1为第二页（如“桌面属性”的“屏幕保护程序”），依此类推。
+但如果照上面的方法做，则该文件会在控制面板中被显示。有两种方法可以不让其显示：
+ （1）. 不要把自己的.cpl文件放在C:WINDOWSSYSTEM中。因为默认的情况下Windows会加载的所有.cpl文件。如果想让其显示则打开C:WINDOWS下的Control.ini文件，在[MMCPL]中写入类似：
+ file.cpl=D:pathfile.cpl
+ 的命令，从而达到显示的目的。
+ （2）. 当你看到Control.ini文件的时候一定可以看到在[MMCPL]上面的[don‘t load]。是的，如果把你的文件以file.cpl=no的格式写入到这里面，那么文件就不被加载了。反之恢复。
+ 
+ d.其他：
+ 注册表中：
+ HKEY_USERS.DEFAULTSoftwareMicrosoftWindowsCurrentVersionExplorerAdvanced
+ 的“HideFileExt”这个键值是确定Windows是不是显示扩展名的值，如果其值为1就隐藏扩展名，为0则不隐藏。
+ EXE文件中：如SirCam蠕虫一样，*.EXE文件的扩展名可以改名称为.BAT、.COM、.PIF、.SCR等，并且运行效果一样，反过来不一定。但.EXE文件并不能更名为.LNK文件，这也许也是SirCam的一个BUG。
+ 最后： Windows的自启动方式有很多样式。这是Windows系统的一部分。一个隐蔽而又很少有人知道的自启动方式是远程监控软件成为一个优秀的软件的必要的条件。对于普通用户来说，了解这些信息也是非常必要的。笔者试图全面的介绍这些可以启动的方法和想法。文中提到的一些自启动方法有的很普通，有的则很少有人知道，有些方式甚至有可能是第一次被写出来。其中的许多方式笔者加入了自己的想法，使一些方式虽然普通但却很隐蔽。 
+ 其中所提的自启动方式全部在Windows98或提到的相应的系统中默认测试通过。对Windows ME和Windows2000只有部分适用。通过对不同平台的自启动方式测试，也可以发现Windows系统还是朝着越来越完善的方向发展。所以在未来的某个WINDOWS版本中，笔者不能保证这些能被使用。但总会有一些可以利用的地方。如果这篇涂鸦能给各位读者带来一些启发，那么笔者将会感到非常高兴！
+ 由于时间仓促再加上笔者所学有限，文中错误之处一定不少，望读者海涵。  
+ 关于Windows的自启动方式的探讨可以与我联系，我的E-mail是snaix@yeah.net。
+ 本文转载请注明作者及出处。若用于商业，请与作者联系。  
+ 主要参考资料： 
+ http://www.tlsecurity.net/auto.html 
+ http://support.microsoft.com/support/kb/articles/Q232/5/09.ASP 
+ Syntax for the RunOnceEx Registry Key?
+ SUMMARY 
+ MORE INFORMATION 
+ RunOnceEx Sample to Run Notepad?
+ Sample Syntax
+ Notes
+ Definition of Values and Subkeys ?
+ Wininit.ini与病毒（名称为笔者所加） 
+ http://www.microsoft.com/technet/security/bulletin/fq00-052.asp

@@ -1,0 +1,6 @@
+FileMapping
+OpenFileMapping
+CreateFileMapping
+1.可实现进程间数据共享
+2.提高读写文件的效率
+3.通过文件句柄获得文件路径

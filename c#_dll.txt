@@ -1,0 +1,204 @@
+http://www.cnblogs.com/goed/archive/2011/11/10/2244085.html
+
+ DllImportAttribute 的字段
+在对托管代码进行 P/Invoke 调用时，DllImportAttribute 类型扮演着重要的角色。DllImportAttribute 的主要作用是给 CLR 指示哪个 DLL 导出您想要调用的函数。相关 DLL 的名称被作为一个构造函数参数传递给 DllImportAttribute。
+
+下表列出了所有与平台调用相关的特性字段。 对于每个字段，下表都将包含其默认值，并且会提供一个链接，用于获取有关如何使用这些字段定义非托管 DLL 函数的信息。http://msdn.microsoft.com/zh-cn/library/w4byd5y4.aspx
+
+字段
+
+说明
+
+BestFitMapping
+
+启用或禁用最佳匹配映射。
+
+CallingConvention
+
+指定用于传递方法参数的调用约定。 默认值为 WinAPI，该值对应于基于 32 位 Intel 的平台的 __stdcall。
+
+CharSet
+
+控制名称重整以及将字符串参数封送到函数中的方式。 默认值为 CharSet.Ansi。
+
+EntryPoint
+
+指定要调用的 DLL 入口点。
+
+ExactSpelling
+
+控制是否应修改入口点以对应于字符集。 对于不同的编程语言，默认值将有所不同。
+
+PreserveSig
+
+控制托管方法签名是否应转换成返回 HRESULT 并且返回值有一个附加的 [out, retval] 参数的非托管签名。
+
+默认值为 true（不应转换签名）。
+
+SetLastError
+
+允许调用方使用 Marshal.GetLastWin32Error API 函数来确定执行该方法时是否发生了错误。 在 Visual Basic 中，默认值为 true；在 C# 和 C++ 中，默认值为 false。
+
+ThrowOnUnmappableChar
+
+控件引发的异常，将无法映射的 Unicode 字符转换成一个 ANSI"?"字符。
+
+ 
+
+除了指出宿主 DLL 外，DllImportAttribute 还包含了一些可选属性，其中四个特别有趣：EntryPoint、CharSet、SetLastError 和 CallingConvention。http://www.360doc.com/content/11/0105/09 /3877783_84071078.shtml
+
+3.1     entrypoint
+入口点用于标识函数在 DLL 中的位置。在托管对象中，目标函数的原名或序号入口点将标识跨越交互操作边界的函数。此外，您可以将入口点映射到一个不同的名称，这实际上是将函数重命名。
+
+以下列出了重命名 DLL 函数的可能原因：
+
+·        避免使用区分大小写的 API 函数名
+
+·        符合现行的命名标准
+
+·        提供采用不同数据类型的函数（通过声明同一 DLL 函数的多个版本）
+
+·        简化对包含 ANSI 和 Unicode 版本的 API 的使用
+
+ 
+
+您可以使用 DllImportAttribute.EntryPoint 字段按名称或序号指定 DLL 函数。如果函数在方法定义中的名称与入口点在 DLL 的名称相同，则不必用 EntryPoint 字段来显式地标识函数。否则，使用以下属性形式之一来指示名称或序号：
+
+l  [DllImport("dllname", EntryPoint="Functionname")]
+
+l  [DllImport("dllname", EntryPoint="#123")]
+
+l  指定入口点名称时，您可以提供一个字符串来指示包含入口点的 DLL 的名称，或者也可以按序号来标识入口点。序号以 # 符号为前缀，如 #1。如果省略此字段，则公共语言运行库将使用以DllImportAttribute 标记的 .NET 方法的名称。
+
+下面的示例演示如何使用 EntryPoint 字段将代码中的 MessageBoxA 替换为 MsgBox
+
+using System.Runtime.InteropServices;
+
+public class Win32 {
+
+    [DllImport("user32.dll", EntryPoint="MessageBoxA")]
+
+    public static extern int MsgBox(int hWnd, String text, String caption, uint type);
+
+}    
+
+3.2     CharSet
+以下来自http://msdn.microsoft.com/zh-cn/library/7b93s42f(v=VS.80).aspx
+
+DllImportAttribute.CharSet 字段控制字符串封送处理并确定平台调用在 DLL 中查找函数名的方式。本主题将介绍这两种行为。
+
+对于采用字符串参数的函数，有些 API 将导出它们的两个版本：窄版本 (ANSI) 和宽版本 (Unicode)。例如，Win32 API 包含 MessageBox 函数的以下入口点名称：
+
+·        MessageBoxA
+
+提供单字节字符 ANSI 格式，其特征是在入口点名称后附加一个“A”。对 MessageBoxA 的调用始终会以 ANSI 格式封送字符串，它常见于 Windows 95 和 Windows 98 平台。
+
+·        MessageBoxW
+
+提供双字节字符 Unicode 格式，其特征是在入口点名称后附加一个“W”。对 MessageBoxW 的调用始终会以 Unicode 格式封送字符串，它常见于 Windows NT、Windows 2000 和 Windows XP 平台。
+
+CharSet 字段接受以下值：
+
+CharSet.Ansi（默认值）
+
+·        字符串封送处理
+
+平台调用将字符串从托管格式 (Unicode) 封送为 ANSI 格式。
+
+·        名称匹配
+
+在 DllImportAttribute.ExactSpelling 字段为 true（它是 Visual Basic 2005 中的默认值）时，平台调用将只搜索您指定的名称。例如，如果指定MessageBox，则平台调用将搜索 MessageBox，如果它找不到完全相同的拼写则失败。
+
+当 ExactSpelling 字段为 false（它是 C++ 和 C# 中的默认值）时，平台调用将首先搜索未处理的别名 (MessageBox)，如果找不到未处理的别名，则将搜索已处理的名称 (MessageBoxA)。请注意，ANSI 名称匹配行为与 Unicode 名称匹配行为不同。
+
+CharSet.Unicode
+
+·        字符串封送处理
+
+平台调用会将字符串从托管格式 (Unicode) 复制为 Unicode 格式。
+
+·        名称匹配
+
+当 ExactSpelling 字段为 true（它是 Visual Basic 2005 中的默认值）时，平台调用将只搜索您指定的名称。例如，如果指定MessageBox，则平台调用将搜索 MessageBox，如果它找不到完全相同的拼写则失败。
+
+当 ExactSpelling 字段为 false（它是 C++ 和 C# 中的默认值）时，平台调用将首先搜索已处理的名称 (MessageBoxW)，如果找不到已处理的名称，则将搜索未处理的别名 (MessageBox)。请注意，Unicode 名称匹配行为与 ANSI 名称匹配行为不同。
+
+CharSet.Auto
+
+·        平台调用在运行时根据目标平台在 ANSI 和 Unicode 格式之间进行选择。
+
+下面的示例演示用于指定字符集的 MessageBox 函数的三个托管定义。在第一个定义中，通过省略，使 CharSet 字段默认为 ANSI 字符集。
+
+[DllImport("user32.dll")]
+
+public static extern int MessageBoxA(int hWnd, String text, String caption, uint type);
+
+[DllImport("user32.dll", CharSet=CharSet.Unicode)]
+
+public static extern int MessageBoxW(int hWnd, String text, String caption, uint type);
+
+[DllImport("user32.dll", CharSet=CharSet.Auto)]
+
+public static extern int MessageBox(int hWnd, String text, String caption, uint type);
+
+CharSet.Ansi 和 CharSet.Unicode 的名称匹配规则大不相同。对于 Ansi 来说，如果将 EntryPoint 设置为“MyMethod”且它存在的话，则返回“MyMethod”。如果 DLL 中没有“MyMethod”，但存在“MyMethodA”，则返回“MyMethodA”。对于 Unicode 来说则正好相反。如果将 EntryPoint 设置为“MyMethod”且它存在的话，则返回“MyMethodW”。如果 DLL 中不存在“MyMethodW”，但存在“MyMethod”，则返回“MyMethod”。如果使用的是 Auto，则匹配规则与平台有关（在 Windows NT 上为 Unicode，在 Windows 98 上为 Ansi）。如果 ExactSpelling 设置为 true，则只有当 DLL 中存在“MyMethod”时才返回“MyMethod”。
+
+如果 DLL 函数不以任何方式处理文本，则可以忽略 DllImportAttribute 的 CharSet 属性。然而，当 Char 或 String 数据是等式的一部分时，应该将 CharSet 属性设置为 CharSet.Auto。这样可以使 CLR 根据宿主 OS 使用适当的字符集。如果没有显式地设置 CharSet 属性，则其默认值为 CharSet.Ansi。这个默认值是有缺点的，因为对于在 Windows 2000、Windows XP 和 Windows NT? 上进行的 interop 调用，它会消极地影响文本参数封送处理的性能。
+
+应该显式地选择 CharSet.Ansi 或 CharSet.Unicode 的 CharSet 值而不是使用 CharSet.Auto 的唯一情况是：您显式地指定了一个导出函数，而该函数特定于这两种 Win32 OS 中的某一种。ReadDirectoryChangesW API 函数就是这样的一个例子，它只存在于基于 Windows NT 的操作系统中，并且只支持 Unicode；在这种情况下，您应该显式地使用 CharSet.Unicode。
+
+有时，Windows API 是否有字符集关系并不明显。一种决不会有错的确认方法是在 Platform SDK 中检查该函数的 C 语言头文件。（如果您无法肯定要看哪个头文件，则可以查看 Platform SDK 文档中列出的每个 API 函数的头文件。）如果您发现该 API 函数确实定义为一个映射到以 A 或 W 结尾的函数名的宏，则字符集与您尝试调用的函数有关系。Windows API 函数的一个例子是在 WinUser.h 中声明的 GetMessage API，您也许会惊讶地发现它有 A 和 W 两种版本。
+
+3.3    SetLastError
+SetLastError 错误处理非常重要，但在编程时经常被遗忘。当您进行 P/Invoke 调用时，也会面临其他的挑战 — 处理托管代码中 Windows API 错误处理和异常之间的区别。我可以给您一点建议。
+
+如果您正在使用 P/Invoke 调用 Windows API 函数，而对于该函数，您使用 GetLastError 来查找扩展的错误信息，则应该在外部方法的 DllImportAttribute 中将 SetLastError 属性设置为 true。这适用于大多数外部方法。
+
+这会导致 CLR 在每次调用外部方法之后缓存由 API 函数设置的错误。然后，在包装方法中，可以通过调用类库的 System.Runtime.InteropServices.Marshal 类型中定义的 Marshal.GetLastWin32Error 方法来获取缓存的错误值。我的建议是检查这些期望来自 API 函数的错误值，并为这些值引发一个可感知的异常。对于其他所有失败情况（包括根本就没意料到的失败情况），则引发在 System.ComponentModel 命名空间中定义的 Win32Exception，并将 Marshal.GetLastWin32Error 返回的值传递给它。
+
+3.4    CallingConvention
+CallingConvention.Cdecl : 调用方清理堆栈。它使您能够调用具有 varargs 的函数。
+
+CallingConvention.StdCall : 被调用方清理堆栈。它是从托管代码调用非托管函数的默认约定。
+
+CallingConvention 字段的默认值为 Winapi，而后者又默认为 StdCall 约定。
+
+可能是最不重要的一个 DllImportAttribute 属性是 CallingConvention。通过此属性，可以给 CLR 指示应该将哪种函数调用约定用于堆栈中的参数。CallingConvention.Winapi 的默认值是最好的选择，它在大多数情况下都可行。然而，如果该调用不起作用，则可以检查 Platform SDK 中的声明头文件，看看您调用的 API 函数是否是一个不符合调用约定标准的异常 API。
+
+通常，本机函数（例如 Windows API 函数或 C- 运行时 DLL 函数）的调用约定描述了如何将参数推入线程堆栈或从线程堆栈中清除。大多数 Windows API 函数都是首先将函数的最后一个参数推入堆栈，然后由被调用的函数负责清理该堆栈。相反，许多 C-运行时 DLL 函数都被定义为按照方法参数在方法签名中出现的顺序将其推入堆栈，将堆栈清理工作交给调用者。
+
+幸运的是，要让 P/Invoke 调用工作只需要让外围设备理解调用约定即可。通常，从默认值 CallingConvention.Winapi 开始是最好的选择。然后，在 C 运行时 DLL 函数和少数函数中，可能需要将约定更改为 CallingConvention.Cdecl。
+
+3.5    ExactSpelling
+ExactSpelling 指示是否应修改非托管 DLL 中的入口点的名称，以与 CharSet 字段中指定的 CharSet 值相对应。如果为 true，则当 DllImportAttribute.CharSet 字段设置为 CharSet 的 Ansi 值时，向方法名称中追加字母 A，当 DllImportAttribute.CharSet 字段设置为 CharSet 的 Unicode 值时，向方法的名称中追加字母 W。此字段的默认值是 false。
+
+3.6    PreserveSig
+PreserveSig指示托管方法签名不应转换成返回 HRESULT、并且可能有一个对应于返回值的附加 [out, retval] 参数的非托管签名。
+
+4      参数类型
+l  数值型直接用对应的就可。（DWORD -> int , WORD -> Int16）
+
+l  API中字符串指针类型 -> .net中string
+
+l  API中句柄 (dWord) -> .net中IntPtr
+
+l  API中结构 -> .net中结构或者类。注意这种情况下，要先用StructLayout特性限定声明结构或类
+
+ 
+
+5      Win32 API 中几个常用的 DLL
+DLL
+
+内容说明
+
+GDI32.dll
+
+用于设备输出的图形设备接口 (GDI) 函数，例如用于绘图和字体管理的函数。
+
+Kernel32.dll
+
+用于内存管理和资源处理的低级别操作系统函数。
+
+User32.dll
+
+用于消息处理、计时器、菜单和通信的 Windows 管理函数。

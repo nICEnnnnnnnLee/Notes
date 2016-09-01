@@ -1,0 +1,262 @@
+String []cmdarray = new String[4];
+cmdarray[0] = "cmd";
+cmdarray[1] = "/c";
+cmdarray[2] = "start";
+cmdarray[3] = "c:/err&or.jpg".replace("&", "^&");
+Runtime.getRuntime().exec(cmdarray);
+
+ 在编写Java程序时，有时候我们需要调用其他的诸如exe,shell这样的程序或脚本。在Java中提供了两种方法来启动其他程序：
+     (1) 使用Runtime的exec()方法
+     (2) 使用ProcessBuilder的start()方法
+       Runtime和ProcessBulider提供了不同的方式来启动程序，设置启动参数、环境变量和工作目录。但是这两种方法都会返回一个用于管理操作系统进程的Process对象。这个对象中的waitFor()是我们今天要讨论的重点。
+      来说说我遇到的实际情况：我想调用ffmpeg程序来对一首歌曲进行转码,把高音质版本的歌曲转为多种低码率的文件。但是在转码完成之后需要做以下操作：读取文件大小，写入ID3信息等。这时我们就想等转码操作完成之后我们可以知道。
+如下这样代码               
+ 
+Java代码
+Process p = null;  
+try {  
+    p = Runtime.getRuntime().exec("notepad.exe");  
+} catch (Exception e) {  
+    e.printStackTrace();  
+}  
+System.out.println("我想被打印...");  
+ 在notepad.exe被执行的同时，打印也发生了，但是我们想要的是任务完成之后它才被打印。
+
+之后发现在Process类中有一个waitFor()方法可以实现。如下：
+ 
+Java代码   收藏代码
+Process p = null;  
+try {  
+    p = Runtime.getRuntime().exec("notepad.exe");  
+    p.waitFor();  
+} catch (Exception e) {  
+    e.printStackTrace();  
+}  
+System.out.println("我想被打印...");  
+ 这下又出现了这样的现象，必须要等我们把记事本关闭, 打印语句才会被执行。并且你不能手动关闭它那程序就一直不动，程序貌似挂了.....这是什么情况，想调用个别的程序有这么难吗?让我们来看看waitFor()的说明：
+
+JDK帮助文档上这么说：如有必要，一直要等到由该 Process 对象表示的进程已经终止。如果已终止该子进程，此方法立即返回。但是直接调用这个方法会导致当前线程阻塞，直到退出子进程。对此JDK文档上还有如此解释：因为本地的系统对标准输入和输出所提供的缓冲池有效，所以错误的对标准输出快速的写入何从标准输入快速的读入都有可能造成子进程的所，甚至死锁。好了，
+        问题的关键在缓冲区这个地方：可执行程序的标准输出比较多，而运行窗口的标准缓冲区不够大，所以发生阻塞。
+        接着来分析缓冲区，哪来的这个东西,当Runtime对象调用exec(cmd)后，JVM会启动一个子进程，该进程会与JVM进程建立三个管道连接：标准输入，标准输出和标准错误流。
+ 
+假设该程序不断在向标准输出流和标准错误流写数据，而JVM不读取的话，当缓冲区满之后将无法继续写入数据，最终造成阻塞在waitfor()这里。 知道问题所在，我们解决问题就好办了。查看网上说的方法多数是开两个线程在waitfor()命令之前读出窗口的标准输出缓冲区和标准错误流的内容。代码如下：  
+ 
+Java代码   收藏代码
+Runtime rt = Runtime.getRuntime();  
+String command = "cmd /c ffmpeg -loglevel quiet -i "+srcpath+" -ab "+bitrate+"k -acodec libmp3lame "+desfile;  
+try {  
+ p = rt.exec(command ,null,new File("C:\\ffmpeg-git-670229e-win32-static\\bin"));  
+ //获取进程的标准输入流  
+ final InputStream is1 = p.getInputStream();   
+ //获取进城的错误流  
+ final InputStream is2 = p.getErrorStream();  
+ //启动两个线程，一个线程负责读标准输出流，另一个负责读标准错误流  
+ new Thread() {  
+    public void run() {  
+       BufferedReader br1 = new BufferedReader(new InputStreamReader(is1));  
+        try {  
+            String line1 = null;  
+            while ((line1 = br1.readLine()) != null) {  
+                  if (line1 != null){}  
+              }  
+        } catch (IOException e) {  
+             e.printStackTrace();  
+        }  
+        finally{  
+             try {  
+               is1.close();  
+             } catch (IOException e) {  
+                e.printStackTrace();  
+            }  
+          }  
+        }  
+     }.start();  
+                                
+   new Thread() {   
+      public void  run() {   
+       BufferedReader br2 = new  BufferedReader(new  InputStreamReader(is2));   
+          try {   
+             String line2 = null ;   
+             while ((line2 = br2.readLine()) !=  null ) {   
+                  if (line2 != null){}  
+             }   
+           } catch (IOException e) {   
+                 e.printStackTrace();  
+           }   
+          finally{  
+             try {  
+                 is2.close();  
+             } catch (IOException e) {  
+                 e.printStackTrace();  
+             }  
+           }  
+        }   
+      }.start();    
+                                
+      p.waitFor();  
+      p.destroy();   
+     System.out.println("我想被打印...");  
+    } catch (Exception e) {  
+            try{  
+                p.getErrorStream().close();  
+                p.getInputStream().close();  
+                p.getOutputStream().close();  
+                }  
+             catch(Exception ee){}  
+          }  
+   }  
+ 这个方法确实可以解决调用waitFor()方法阻塞无法返回的问题。但是在其中过程中我却发现真正起关键作用的缓冲区是getErrorStream()所对应的那个缓冲区没有被清空，意思就是说其实只要及时读取标准错误流缓冲区的数据程序就不会被block。
+ 
+Java代码 
+StringBuffer sb = new StringBuffer();  
+try {  
+Process pro = Runtime.getRuntime().exec(cmdString);  
+BufferedReader br = new BufferedReader(new InputStreamReader(pro.getInputStream()), 4096);  
+String line = null;  
+int i = 0;  
+while ((line = br.readLine()) != null) {  
+if (0 != i)  
+sb.append("\r\n");  
+i++;  
+sb.append(line);  
+}  
+} catch (Exception e) {  
+sb.append(e.getMessage());  
+}  
+return sb.toString();  
+ 
+ 不过这种写法不知道是不是适合所有的情况，网上其他人说的需要开两个线程可能不是没有道理。这个还是具体问题具体对待吧。
+ 
+到这里问题的原因也清楚了，问题也被解决了，是不是就结束了。让我们回过头来再分析一下，问题的关键是处在输入流缓冲区那个地方，子进程的产生的输出流没有被JVM及时的读取最后缓冲区满了就卡住了。如果我们能够不让子进程向输入流写入数据，是不是可以解决这个问题。对于这个想法直接去ffmpeg官网查找，最终发现真的可以关闭子进程向窗口写入数据。命令如下：
+ffmpeg.exe -loglevel quiet -i 1.mp3 -ab 16k -ar 22050 -acodec libmp3lame r.mp3
+稍微分析一下：-acodec 音频流编码方式 -ab 音频流码率(默认是同源文件码率，也需要视codec而定) -ar 音频流采样率(大多数情况下使用44100和48000，分别对应PAL制式和NTSC制式，根据需要选择)，重点就是-loglevel quiet这句 
+http://www.ffmpeg.com.cn/index.php/Ffmpeg%E9%80%89%E9%A1%B9%E8%AF%A6%E8%A7%A3
+ 
+这才是我们想要的结果：
+ 
+Java代码   收藏代码
+try {  
+  p = Runtime.getRuntime().exec("cmd /c ffmpeg -loglevel quiet -i     D:\\a.mp3 -ab 168k -ar 22050 -acodec libmp3lame D:\\b.mp3",null,  
+                    new File( "C:\\ffmpeg-git-670229e-win32-static\\bin"));  
+  p.waitFor();  
+} catch (Exception e) {  
+    e.printStackTrace();  
+}  
+System.out.println("我想被打印...");  
+ 
+最后是自己写的一个简单的操作MP3文件的类
+ 
+Java代码   收藏代码
+package com.yearsaaaa.util;  
+  
+import java.io.File;  
+import java.io.FileInputStream;  
+import java.math.BigDecimal;  
+  
+import javazoom.jl.decoder.Bitstream;  
+import javazoom.jl.decoder.Header;  
+  
+/** 
+ * @className:MP3Util.java 
+ * @classDescription: 
+ * @author:MChen 
+ * @createTime:2012-2-9 
+ */  
+public class MP3Util {  
+      
+    /** 
+     * 获取文件大小,以M为单位，保留小数点两位 
+     */  
+    public static double getMP3Size(String path)  
+    {  
+        File file = new File(path);  
+        double size = (double)file.length()/(1024*1024);  
+        size = new BigDecimal(size).setScale(2,BigDecimal.ROUND_UP).doubleValue();  
+        System.out.println("MP3文件的大小为："+size);  
+        return size;  
+    }  
+      
+    /** 
+     * 该方法只能获取mp3格式的歌曲长度 
+     * 库地址:http://www.javazoom.net/javalayer/javalayer.html 
+     */  
+    public static String getMP3Time(String path)  
+    {  
+        String songTime = null;  
+        FileInputStream fis = null;  
+        Bitstream bt = null;  
+        File file = new File(path);  
+        try {  
+            fis = new FileInputStream(file);  
+            int b=fis.available();  
+            bt=new Bitstream(fis);  
+            Header h=bt.readFrame();  
+            int time=(int) h.total_ms(b);  
+            int i=time/1000;  
+            bt.close();  
+            fis.close();  
+            if(i%60 == 0)  
+                songTime = (i/60+":"+i%60+"0");  
+            if(i%60 <10)  
+                songTime = (i/60+":"+"0"+i%60);  
+            else  
+                songTime = (i/60+":"+i%60);  
+            System.out.println("该歌曲的长度为："+songTime);  
+        }  
+        catch (Exception e) {  
+            try {  
+                bt.close();  
+                fis.close();  
+            } catch (Exception ee) {  
+                ee.printStackTrace();  
+            }  
+        }  
+        return songTime;  
+    }  
+      
+    /** 
+     * 将源MP3向下转码成低品质的文件 
+     * @参数： @param srcPath 源地址 
+     * @参数： @param bitrate 比特率 
+     * @参数： @param desfile 目标文件 
+     * @return void    
+     * @throws 
+     */  
+    public static void mp3Transcoding(String srcPath,String bitrate,String desFile)  
+    {     
+        //Java调用CMD命令时,不能有空格  
+        String srcpath = srcPath.replace(" ", "\" \"");  
+        String desfile = desFile.replace(" ", "\" \"");  
+        Runtime rt = Runtime.getRuntime();  
+        String command = "cmd /c ffmpeg -loglevel quiet -i "+srcpath+" -ab "+bitrate+"k -acodec libmp3lame "+desfile;  
+        System.out.println(command);  
+        Process p = null;  
+        try{  
+            //在Linux下调用是其他写法  
+            p = rt.exec(command ,null,new File("C:\\ffmpeg-git-670229e-win32-static\\bin"));  
+            p.waitFor();  
+            System.out.println("线程返回,转码后的文件大小为："+desFile.length()+",现在可以做其他操作了,比如重新写入ID3信息。");  
+        }  
+        catch(Exception e){  
+            e.printStackTrace();  
+            try{  
+                p.getErrorStream().close();  
+                p.getInputStream().close();  
+                p.getOutputStream().close();  
+                }  
+            catch(Exception ee){}  
+        }  
+    }  
+      
+    public static void main(String[] args) {  
+        //String[] str = {"E:\\Kugou\\陈慧娴 - 不羁恋人.mp3","E:\\Kugou\\三寸天堂.mp3","E:\\Tmp\\陈淑桦 - 梦醒时分.mp3","E:\\Tmp\\1.mp3","E:\\Test1\\走天涯、老猫 - 杨望.acc","E:\\Test1\\因为爱情 铃.mp3"};  
+        String[] str = {"E:\\Kugou\\三寸天堂.mp3"};  
+        for(String s : str)  
+        {  
+            //getMP3Size(s);  
+            //getMP3Time(s);  
+            File f = new File(s);  
+            mp3Transcoding(f.getAbsolutePath(),"64","d:\\chenmiao.mp3");  
+        }  
+    }  
+}  

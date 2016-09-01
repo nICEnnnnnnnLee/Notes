@@ -1,0 +1,55 @@
+#include <windows.h>
+#include <stdlib.h>
+#include <olectl.h>
+#pragma comment(lib, "oleaut32.lib")
+
+
+HRESULT SaveIcon(HICON hIcon, LPCSTR path) {
+    // Create the IPicture intrface
+    PICTDESC desc = { sizeof(PICTDESC) };
+    desc.picType = PICTYPE_ICON;
+    desc.icon.hicon = hIcon;
+    IPicture* pPicture = 0;
+    HRESULT hr = OleCreatePictureIndirect(&desc, IID_IPicture, FALSE, (void**)&pPicture);
+    if (FAILED(hr)) return hr;
+
+    // Create a stream and save the image
+    IStream* pStream = 0;
+    CreateStreamOnHGlobal(0, TRUE, &pStream);
+    LONG cbSize = 0;
+    hr = pPicture->SaveAsFile(pStream, TRUE, &cbSize);
+
+    // Write the stream content to the file
+    if (!FAILED(hr)) {
+        HGLOBAL hBuf = 0;
+        GetHGlobalFromStream(pStream, &hBuf);
+        void* buffer = GlobalLock(hBuf);
+        HANDLE hFile = CreateFile(path, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+        if (!hFile) hr = HRESULT_FROM_WIN32(GetLastError());
+        else {
+            DWORD written = 0;
+            WriteFile(hFile, buffer, cbSize, &written, 0);
+            CloseHandle(hFile);
+        }
+        GlobalUnlock(buffer);
+    }
+    // Cleanup
+    pStream->Release();
+    pPicture->Release();
+    return hr;
+
+}
+
+int main(HINSTANCE hInst, HINSTANCE hPrev, LPSTR szCmdline, INT nShow)
+{
+	SHFILEINFO sfi;
+	 ZeroMemory(&sfi, sizeof(SHFILEINFO));
+	 SHGetFileInfo("D:\\2.exe", FILE_ATTRIBUTE_NORMAL, &sfi, sizeof(SHFILEINFO), SHGFI_ICON | SHGFI_LARGEICON);
+	 HICON _icon = sfi.hIcon;
+
+	 if (!_icon) {
+		 return GetLastError();
+	 }
+    HRESULT hr = SaveIcon(_icon, L"d:\\test.ico");
+    return 0;
+}

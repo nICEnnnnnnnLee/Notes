@@ -1,0 +1,172 @@
+http://blog.csdn.net/wangqiulin123456/article/details/8142018
+http://www.cppblog.com/SpringSnow/archive/2008/12/14/69451.html
+
+
+
+快捷方式的创建
+
+快捷方式的创建可以通过SHCreateShortcut这个函数来创建，其原型如下：
+
+DWORD WINAPI SHCreateShortcut(
+
+  LPTSTR szShortcut,
+
+LPTSTR szTarget
+
+);
+
+快捷方式路径的获取
+
+快捷方式的目标路径获取，可以通过SHGetShortcutTarget来获取。其原型如下：
+
+BOOL SHGetShortcutTarget(
+
+          LPTSTR szShortcut,
+
+ LPTSTR szTarget,
+
+ int cbMax
+
+);
+
+
+例如：
+
+TCHAR str[MAX_PATH];
+
+SHGetShortcutTarget(_T("\\My Documents\\Windows Media Player.lnk"), str, MAX_PATH);
+
+#include <windows.h>
+#include <ShlObj.h>
+#include <comutil.h>
+
+#pragma comment(lib, "comsuppw.lib") 
+
+struct SHORTCUTSTRUCT
+{
+	LPTSTR pszTarget;
+	LPTSTR pszDesc;
+	WORD wHotKey;
+	LPTSTR pszIconPath;
+	WORD wIconIndex;
+};
+typedef SHORTCUTSTRUCT* LPSHORTCUTSTRUCT;
+
+
+HRESULT SHCreateShortCut(LPCTSTR, LPSHORTCUTSTRUCT);
+HRESULT SHResolveShortcut(LPCTSTR, LPSHORTCUTSTRUCT);
+
+int WINAPI WinMain( __in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance, __in LPSTR lpCmdLine, __in int nShowCmd )
+{
+	/*char * szchar = "xxxxxxx";//这段代码是为了测试这个ConvertStringToBSTR
+	BSTR szbstr = _com_util::ConvertStringToBSTR(szchar);
+	SysFreeString(szbstr); 
+	MessageBox(NULL,szbstr,TEXT("Test"),MB_OK);*/
+	CoInitialize(NULL);
+	SHORTCUTSTRUCT shortcut;
+	shortcut.pszTarget = TEXT("C:\\Users\\Administrator\\Desktop\\(Un)RegisterOcxDll.exe");
+	shortcut.pszDesc = TEXT("(Un)RegisterOcxDll.exe");
+	shortcut.wHotKey = 1;
+	shortcut.pszIconPath = NULL;
+	shortcut.wIconIndex = 1;
+
+	SHCreateShortCut(TEXT("C:\\Users\\Administrator\\Desktop\\123.lnk"),&shortcut);
+	CoUninitialize();
+
+}
+
+HRESULT SHCreateShortCut(LPCTSTR szLnkFile, LPSHORTCUTSTRUCT lpss)
+{
+	WCHAR wszLnkFile[MAX_PATH] = {0};
+	IShellLink* pShellLink = NULL;
+	IPersistFile* pPF = NULL;
+	// 验证SHORTCUTSTRUCT指针
+	if(lpss == NULL)
+		return E_FAIL;
+	// 建立COM服务器，假设CoInitialize()已经被调用
+	HRESULT hr = CoCreateInstance(CLSID_ShellLink, NULL,
+		CLSCTX_INPROC_SERVER, IID_IShellLink,
+		reinterpret_cast<LPVOID*>(&pShellLink));
+	if(FAILED(hr))
+		return hr;
+	//设置属性
+	pShellLink->SetPath(lpss->pszTarget);
+	pShellLink->SetDescription(lpss->pszDesc);
+	pShellLink->SetHotkey(lpss->wHotKey);
+	pShellLink->SetIconLocation(lpss->pszIconPath, lpss->wIconIndex);
+	//取得IPersistFile接口
+	hr = pShellLink->QueryInterface(
+		IID_IPersistFile, reinterpret_cast<LPVOID*>(&pPF));
+	if(FAILED(hr))
+	{
+		pShellLink->Release();
+		return hr;
+	}
+	// 保存LNK(Unicode名)
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szLnkFile, -1, wszLnkFile, MAX_PATH);
+	hr = pPF->Save(wszLnkFile, TRUE);
+	// 清理
+	pPF->Release();
+	pShellLink->Release();
+	return hr;
+}
+
+HRESULT SHResolveShortcut(LPCTSTR szLnkFile, LPSHORTCUTSTRUCT lpss)
+{
+	WCHAR wszLnkFile[MAX_PATH] = {0};
+	IShellLink* pShellLink = NULL;
+	IPersistFile* pPF = NULL;
+	// 建立合适的COM服务器
+	HRESULT hr = CoCreateInstance(CLSID_ShellLink, NULL,CLSCTX_INPROC_SERVER,
+		IID_IShellLink,reinterpret_cast<LPVOID*>(&pShellLink));
+	if(FAILED(hr))
+		return hr;
+	// 取得装入.LNK 文件的IPersistFile接口
+	hr = pShellLink->QueryInterface(IID_IPersistFile,
+		reinterpret_cast<LPVOID*>(&pPF));
+	if(FAILED(hr))
+	{
+		pShellLink->Release();
+		return hr;
+	}
+	// 装入快捷方式(Unicode 名)
+	MultiByteToWideChar(CP_ACP, 0, szLnkFile, -1, wszLnkFile, MAX_PATH);
+	hr = pPF->Load(wszLnkFile, STGM_READ);
+	if(FAILED(hr))
+	{
+		pPF->Release();
+		pShellLink->Release();
+		return hr;
+	}
+	// 解析连接
+	hr = pShellLink->Resolve(NULL, SLR_ANY_MATCH);
+	if(FAILED(hr))
+	{
+		pPF->Release();
+		pShellLink->Release();
+		return hr;
+	}
+	// 抽取信息，充填到lpss
+	if(lpss != NULL)
+	{
+		TCHAR szPath[MAX_PATH] = {0};
+		TCHAR szDesc[MAX_PATH] = {0};
+		TCHAR szIcon[MAX_PATH] = {0};
+		WORD w = 0;
+		WORD wIcon = 0;
+		WIN32_FIND_DATA wfd;
+		pShellLink->GetPath(szPath, MAX_PATH, &wfd, SLGP_SHORTPATH);
+		pShellLink->GetDescription(szDesc, MAX_PATH);
+		pShellLink->GetHotkey(&w);
+		pShellLink->GetIconLocation(szIcon, MAX_PATH,
+			reinterpret_cast<int*>(&wIcon));
+		lpss->pszTarget = szPath;
+		lpss->pszDesc = szDesc;
+		lpss->pszIconPath = szIcon;
+		lpss->wHotKey = w;
+		lpss->wIconIndex = wIcon;
+	}
+	pPF->Release();
+	pShellLink->Release();
+	return hr;
+}

@@ -1,0 +1,363 @@
+http://blog.csdn.net/friendan/article/details/12222651
+
+根据我的理解，先说一下HOOK API的一般思路和步骤。
+
+HOOK API的思路就是修改原API的入口，使其跳转到我们的假API入口，
+
+然后执行我们的假API函数，为什么说是假API函数呢？
+
+因为我们的假API，除了函数名称和真实API的名称不一样之外，其它都是相同的，即
+
+它们的函数参数和返回值和调用形式都是一样的。
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+HOOK API的一般步骤：
+
+1.定义假API函数
+
+       注意假API函数，除了函数名称和真实API不一样之外，其它的都要跟真实API的定义相同，如参数类型和返回值、调用形式等。
+
+如我们可以这样定义假的MessageBoxW:
+
+[cpp] view plaincopyprint?
+int WINAPI MyMessageBoxW(HWND hWnd,LPCWSTR lpText,LPCWSTR lpCaption,UINT uType)  
+{  
+    //定义假API时，具体的函数体代码暂时可不写...  
+    return 0;  
+}  
+至于我们如何知道真实API的原型定义呢？很简单，查看MSDN即可，或者你也可以在VS2008开发环境中，
+
+写下该真实API，然后选中该API，再点鼠标右键，选择【转到定义】，就可以看到其原型声明了。
+
+...........................................................................................................................................................................
+
+2.定义API函数类型
+
+       因为我们要动态获取原API函数的地址，获取到后，我们要将其保存起来，保存在哪里呢？
+
+这就是定义API函数类型的原因了，有了API函数类型的定义后，我们就可以用其定义一个变量来 保存获取到的
+
+真实API函数的地址了，例如，我定义的MessageBoxW函数类型的语句如下：
+
+
+[cpp] view plaincopyprint?
+//原函数类型定义  
+typedef int (WINAPI* MsgBoxW)(HWND hWnd,LPCWSTR lpText,LPCWSTR lpCaption,UINT uType);  
+注意，原函数类型定义中的函数返回值和参数类型要跟MessageBoxW的定义相同。
+上面就是定义了API函数类型MsgBoxW,这跟我们常见的int、char、float等类型，用法是一样的，
+
+实际上，我们完全可以把MsgBoxW当成int类型来使用，这样一说，API函数类型也不过如此嘛。
+
+有了API函数类型MsgBoxW,我们就可以用其来定义变量，从而为保存原API地址做准备了。
+
+如：
+
+
+[cpp] view plaincopyprint?
+MsgBoxW OldMsgBoxW=NULL;//指向原函数的指针  
+
+有了API函数类型后，我们还需要一个远指针类型的变量，因为系统API是在dll文件中的，更多关于
+远指针的信息，我现在也不是很清楚，有兴趣的盆友，不妨百度一下。系统已经给我们定义好了
+
+远指针类型：FARPROC,我们直接拿来用即可，如：
+
+
+[cpp] view plaincopyprint?
+FARPROC pfOldMsgBoxW;  //指向函数的远指针  
+..................................................................................................................................................................................................................
+
+3.获取API函数入口
+         有了保存原API函数地址的变量OldMsgBox和指向原API函数的远指针，我们就可以获取真实API的地址了。
+
+如：
+
+
+[cpp] view plaincopyprint?
+//获取原API入口地址  
+  HMODULE hmod=::LoadLibrary(_T("User32.dll"));  
+  OldMsgBoxW=(MsgBoxW)::GetProcAddress(hmod,"MessageBoxW");  
+  pfOldMsgBoxW=(FARPROC)OldMsgBoxW;  
+注意，上面我们将原API地址OldMsgBoxW强制转换成了远指针pfOldMsgBoxW，至于为什么要强制转换，
+
+我现在也不是很清楚，想知道的童鞋，可以百度一下。
+
+................................................................................................................................................................................................................
+
+4.保存原API入口的前5个字节
+
+           保存的目的是为了恢复用的，毕竟我们HOOK了API后，还需要调用真实的API嘛，
+
+如何保存一个函数入口的前5个字节呢？这里用到了汇编代码，至于不用汇编可以吗？我想是可以的。
+
+有空时，我再试一下，不用汇编是否能保存一个API入口的前5个字节，这里就先用别人写的汇编代码吧，
+
+代码如下：
+
+[cpp] view plaincopyprint?
+// 将原API的入口前5个字节代码保存到OldCode[]  
+  BYTE OldCode[5];  
+  _asm   
+  {   
+   lea edi,OldCode      //获取OldCode数组的地址,放到edi  
+   mov esi,pfOldMsgBoxW //获取原API入口地址，放到esi  
+   cld    //方向标志位，为以下两条指令做准备  
+   movsd //复制原API入口前4个字节到OldCode数组  
+   movsb //复制原API入口第5个字节到OldCode数组  
+  }  
+
+....................................................................................................................................................................................................................
+5.获取新入口的前5个字节
+
+          因为我们修改真实API入口的前5个字节，使其跳转到我们假API函数的入口地址，即改成Jmp xxxxxxxx,其中xxxxxxxx就是我们
+
+假API的入口地址，那么我们如何得到该地址呢？
+
+前人已经总结出了一条公式：
+
+int nAddr= UserFunAddr – SysFunAddr - （我们定制的这条指令的大小）;
+
+Jmp nAddr; //我们要获取的就是nAddr的值
+既然已经有了公式，我们拿来用即可，UserFunAddr相当于我们的假API,SysFunAddr相当于真实API，这里指令的大小为5，
+
+实现以上公式的汇编代码如下：
+
+[cpp] view plaincopyprint?
+//获取MyMessageBoxW的相对地址,为Jmp做准备  
+  //int nAddr= UserFunAddr – SysFunAddr - （我们定制的这条指令的大小）;  
+  //Jmp nAddr;  
+  //（我们定制的这条指令的大小）, 这里是5，5个字节嘛  
+  BYTE NewCode[5];  
+  _asm   
+  {   
+   lea eax,MyMessageBoxW //获取我们的MyMessageBoxW函数地址  
+   mov ebx,pfOldMsgBoxW  //原系统API函数地址  
+   sub eax,ebx           //int nAddr= UserFunAddr – SysFunAddr  
+   sub eax,5             //nAddr=nAddr-5  
+   mov dword ptr [NewCode+1],eax //将算出的地址nAddr保存到NewCode后面4个字节  
+                                 //注：一个函数地址占4个字节  
+  }   
+
+......................................................................................................................................................................................................................
+6.修改真实API入口的前5个字节
+
+       前面我们已经保存了真实API入口的前5个字节，也已经计算出了新入口的前5个字节，
+
+可谓万事俱备，只欠东风，现在可以修改真实API入口的前5个字节了。
+
+代码如下：
+
+[cpp] view plaincopyprint?
+//填充完毕，现在NewCode[]里的指令相当于Jmp MyMessageBoxW  
+  //既然已经获取到了Jmp MyMessageBoxW  
+  //现在该是将Jmp MyMessageBoxW写入原API入口前5个字节的时候了  
+  //知道为什么是5个字节吗？  
+  //Jmp指令相当于0xe9,占一个字节的内存空间  
+  //MyMessageBoxW是一个地址，其实是一个整数，占4个字节的内存空间  
+  //int n=0x123;   n占4个字节和MyMessageBoxW占4个字节是一样的  
+  //1+4=5，知道为什么是5个字节了吧  
+  HookOn();   
+
+修改API入口前5个字节的HookOn()函数具体代码如下：
+[cpp] view plaincopyprint?
+//开启钩子的函数  
+void HookOn()   
+{   
+ ASSERT(hProcess!=NULL);  
+  
+ DWORD dwTemp=0;  
+ DWORD dwOldProtect;  
+   
+ //修改API函数入口前5个字节为jmp xxxxxx  
+ VirtualProtectEx(hProcess,pfOldMsgBoxW,5,PAGE_READWRITE,&dwOldProtect);   
+ WriteProcessMemory(hProcess,pfOldMsgBoxW,NewCode,5,0);  
+ VirtualProtectEx(hProcess,pfOldMsgBoxW,5,dwOldProtect,&dwTemp);  
+  
+}  
+
+以上修改API函数入口前5个字节，用到了两个系统API函数，百度百科里面对它们有详解，在此就不说了。
+注:hProcess是进程句柄，我们可以这样获取它:
+
+DWORD dwPid=::GetCurrentProcessId();
+HANDLE hProcess=OpenProcess(PROCESS_ALL_ACCESS,0,dwPid);
+..........................................................................................................................................................................................................
+
+
+7.恢复API函数入口前5个字节
+          有修改，就有恢复嘛，恢复函数代码如下：
+
+
+[cpp] view plaincopyprint?
+//关闭钩子的函数  
+void HookOff()  
+{   
+ ASSERT(hProcess!=NULL);  
+  
+ DWORD dwTemp=0;  
+ DWORD dwOldProtect;  
+  
+ //恢复API函数入口前5个字节  
+ VirtualProtectEx(hProcess,pfOldMsgBoxW,5,PAGE_READWRITE,&dwOldProtect);   
+ WriteProcessMemory(hProcess,pfOldMsgBoxW,OldCode,5,0);   
+ VirtualProtectEx(hProcess,pfOldMsgBoxW,5,dwOldProtect,&dwTemp);    
+}  
+
+
+注:hProcess是进程句柄，我们可以这样获取它:
+
+DWORD dwPid=::GetCurrentProcessId();
+HANDLE hProcess=OpenProcess(PROCESS_ALL_ACCESS,0,dwPid);
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+以上就是HOOK API的大致流程了，看不明白的盆友，不妨再看下我写的源码，文章结合源码，
+希望有助于你们的理解。
+
+源码下载地址：Hook自己程序的MessageBoxW.zip
+
+学会了HOOK自己的程序，下篇我们再接再厉，HOOK系统所有程序的MessageBoxA和MessageBoxW
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+下面贴一下以上这个程序的主要代码，算是有个整体印象吧：
+
+
+[cpp] view plaincopyprint?
+//原函数类型定义  
+typedef int (WINAPI* MsgBoxW)(HWND hWnd,LPCWSTR lpText,LPCWSTR lpCaption,UINT uType);  
+MsgBoxW OldMsgBoxW=NULL;//指向原函数的指针  
+FARPROC pfOldMsgBoxW;  //指向函数的远指针  
+BYTE OldCode[5]; //原系统API入口代码  
+BYTE NewCode[5]; //原系统API新的入口代码 (jmp xxxxxxxx)  
+  
+HANDLE hProcess=NULL;//本程序进程句柄  
+HINSTANCE hInst=NULL;//API所在的dll文件句柄  
+  
+void HookOn();  
+void HookOff();  
+int WINAPI MyMessageBoxW(HWND hWnd,LPCWSTR lpText,LPCWSTR lpCaption,UINT uType)  
+{  
+    TRACE(lpText);  
+    HookOff();//调用原函数之前，记得先恢复HOOK呀，不然是调用不到的  
+              //如果不恢复HOOK，就调用原函数，会造成死循环  
+              //毕竟调用的还是我们的函数，从而造成堆栈溢出，程序崩溃。  
+  
+    int nRet=::MessageBoxW(hWnd,_T("哈哈，MessageBoxW被HOOK了"),lpCaption,uType);  
+  
+    HookOn();//调用完原函数后，记得继续开启HOOK，不然下次会HOOK不到。   
+  
+    return nRet;  
+}  
+  
+  
+  
+  
+//开启钩子的函数  
+void HookOn()   
+{   
+ ASSERT(hProcess!=NULL);  
+  
+ DWORD dwTemp=0;  
+ DWORD dwOldProtect;  
+   
+ //修改API函数入口前5个字节为jmp xxxxxx  
+ VirtualProtectEx(hProcess,pfOldMsgBoxW,5,PAGE_READWRITE,&dwOldProtect);   
+ WriteProcessMemory(hProcess,pfOldMsgBoxW,NewCode,5,0);  
+ VirtualProtectEx(hProcess,pfOldMsgBoxW,5,dwOldProtect,&dwTemp);  
+  
+}  
+  
+//关闭钩子的函数  
+void HookOff()  
+{   
+ ASSERT(hProcess!=NULL);  
+  
+ DWORD dwTemp=0;  
+ DWORD dwOldProtect;  
+  
+ //恢复API函数入口前5个字节  
+ VirtualProtectEx(hProcess,pfOldMsgBoxW,5,PAGE_READWRITE,&dwOldProtect);   
+ WriteProcessMemory(hProcess,pfOldMsgBoxW,OldCode,5,0);   
+ VirtualProtectEx(hProcess,pfOldMsgBoxW,5,dwOldProtect,&dwTemp);    
+}  
+  
+//获取API函数入口前5个字节  
+//旧入口前5个字节保存在前面定义的字节数组BYTE OldCode[5]  
+//新入口前5个字节保存在前面定义的字节数组BYTE NewCode[5]  
+void GetApiEntrance()  
+{  
+   
+  //获取原API入口地址  
+  HMODULE hmod=::LoadLibrary(_T("User32.dll"));  
+  OldMsgBoxW=(MsgBoxW)::GetProcAddress(hmod,"MessageBoxW");  
+  pfOldMsgBoxW=(FARPROC)OldMsgBoxW;  
+    
+  if (pfOldMsgBoxW==NULL)  
+  {  
+    MessageBox(NULL,_T("获取原API入口地址出错"),_T("error!"),0);  
+    return;  
+  }  
+  
+  // 将原API的入口前5个字节代码保存到OldCode[]  
+  _asm   
+  {   
+   lea edi,OldCode      //获取OldCode数组的地址,放到edi  
+   mov esi,pfOldMsgBoxW //获取原API入口地址，放到esi  
+   cld    //方向标志位，为以下两条指令做准备  
+   movsd //复制原API入口前4个字节到OldCode数组  
+   movsb //复制原API入口第5个字节到OldCode数组  
+  }  
+  
+  
+  NewCode[0]=0xe9;//实际上0xe9就相当于jmp指令  
+  
+  //获取MyMessageBoxW的相对地址,为Jmp做准备  
+  //int nAddr= UserFunAddr – SysFunAddr - （我们定制的这条指令的大小）;  
+  //Jmp nAddr;  
+  //（我们定制的这条指令的大小）, 这里是5，5个字节嘛  
+  BYTE NewCode[5];  
+  _asm   
+  {   
+   lea eax,MyMessageBoxW //获取我们的MyMessageBoxW函数地址  
+   mov ebx,pfOldMsgBoxW  //原系统API函数地址  
+   sub eax,ebx           //int nAddr= UserFunAddr – SysFunAddr  
+   sub eax,5             //nAddr=nAddr-5  
+   mov dword ptr [NewCode+1],eax //将算出的地址nAddr保存到NewCode后面4个字节  
+                                 //注：一个函数地址占4个字节  
+  }   
+   
+  
+  //填充完毕，现在NewCode[]里的指令相当于Jmp MyMessageBoxW  
+  //既然已经获取到了Jmp MyMessageBoxW  
+  //现在该是将Jmp MyMessageBoxW写入原API入口前5个字节的时候了  
+  //知道为什么是5个字节吗？  
+  //Jmp指令相当于0xe9,占一个字节的内存空间  
+  //MyMessageBoxW是一个地址，其实是一个整数，占4个字节的内存空间  
+  //int n=0x123;   n占4个字节和MyMessageBoxW占4个字节是一样的  
+  //1+4=5，知道为什么是5个字节了吧  
+  HookOn();   
+}  
+  
+  
+  
+//开始Hook MessageBoxW  
+void CHookMsgBoxDlg::OnBnClickedBtnStartHook()  
+{  
+    DWORD dwPid=::GetCurrentProcessId();  
+    hProcess=OpenProcess(PROCESS_ALL_ACCESS,0,dwPid);   
+  
+    GetApiEntrance();  
+    SetDlgItemText(IDC_STATIC_INFO,_T("Hook已启动"));  
+}  
+  
+//调用MessageBoxW  
+void CHookMsgBoxDlg::OnBnClickedBtnCallMsgBox()  
+{  
+    ::MessageBoxW(m_hWnd,_T("这是正常的MessageBoxW"),_T("Hello"),0);  
+}  
+  
+//停止Hook MessageBoxW  
+void CHookMsgBoxDlg::OnBnClickedBtnStopHook()  
+{  
+    HookOff();  
+    SetDlgItemText(IDC_STATIC_INFO,_T("Hook未启动"));  
+}  

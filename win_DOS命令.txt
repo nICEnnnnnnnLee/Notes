@@ -1,0 +1,24 @@
+mklink 
+基本介绍：
+在CMD命令行输入mklink /?，能获得以下帮助：
+
+创建符号链接。
+
+MKLINK [[/D] | [/H] | [/J]] Link Target
+
+        /D      创建目录符号链接。默认为文件
+                符号链接。
+        /H      创建硬链接，而不是符号链接。
+        /J      创建目录联接。
+        Link    指定新的符号链接名称。
+        Target  指定新链接引用的路径
+                (相对或绝对)。
+windows  XP  ：
+命令junction
+win7：
+命令mklink
+xp必须安装junction
+下载地址：http://download.sysinternals.com/Files/Junction.zip（只有78K）
+下载之后放在windows\system32目录
+==========================================================
+subst

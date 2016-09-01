@@ -1,0 +1,5 @@
+1.TopMost=true
+总是在最上层
+
+2.FormBorderStyle=None
+没有标题栏和边框

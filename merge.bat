@@ -1,0 +1,1 @@
+copy ubuntu_android.jpg /b + ÇØ•rÃ÷ÔÂ.torrent c0.jpg

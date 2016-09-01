@@ -1,0 +1,7 @@
+¹Ò¹³API
+http://www.360doc.com/content/13/0911/10/13336430_313669949.shtml
+
+[DllImport("QomoHookSrv.dll", CallingConvention=CallingConvention.Cdecl)]
+private extern static bool InstallHook( int processID);
+[DllImport("QomoHookSrv.dll", CallingConvention=CallingConvention.Cdecl)]
+private extern static bool UninstallHook();

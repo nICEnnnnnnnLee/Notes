@@ -1,0 +1,98 @@
+Java动态调用方法
+
+博客分类： java
+Java 
+Java代码  收藏代码
+public void function(String str)  
+  
+{  
+  
+      / /根据 str的值 调用相应的方法  
+  
+}  
+  
+public void test()  
+  
+{  
+  
+     / /code  
+  
+}  
+
+
+如str的值为test，就调用test方法 
+
+
+
+主要用到java反射机制，Class和Method这些类。 
+
+
+
+动态调用的方法：a.getClass().getMethod(str, new Class[]{}).invoke(a, new Object[]{}) 
+
+其中，a为类的对象，str为要被调用的方法名 
+
+1、a.getClass()得到a.class 对象 
+
+2、getMethod(str, new Class[]{})得到a对象中名为str的不带参数的方法。。。 
+
+      如果str方法带参数如str(String s, int i)，就要这样写getMethod(str, new Class[]{String.class,int.class}) 
+
+3、invoke(a,new Object[]{})调用方法，第一个参数是要调用这个方法的对象，如果方法是static的，这个参数可以为null 
+
+      如果调用有参数的方法str(String s, int i),应该这样写invoke(a,new Object[]{"jimmy", 1}) 
+
+
+
+下面是代码，帮助理解 
+Java代码  收藏代码
+public class MovingInvokeTest  
+{  
+    private static MovingInvokeTest movingInvokeTest = new MovingInvokeTest();    / /创建MovingInvokeTest对象  
+  
+  
+    public void do_test(String str,int i) throws Exception                                                 / /根据str字符串调用方法，变量i只是为了判断  
+  
+                                                                                                                                          / /调用有几个参数的方法  
+    {  
+      if(i == 0)                   / /调用没有参数的方法  
+       movingInvokeTest.getClass().getMethod(str, new Class[]{}).invoke(movingInvokeTest, new Object[]{});  
+      else if(i == 1)            / /调用有一个参数的方法，参数为String类型的s  
+       movingInvokeTest.getClass().getMethod(str, new Class[]{String.class}).invoke(movingInvokeTest, new Object[]{"s"});  
+      else if(i == 2)           / / /调用有两个参数的方法 参数分别为String类型的qw和int型的1  
+       movingInvokeTest.getClass().getMethod(str, new Class[]{String.class,int.class}).invoke(movingInvokeTest, new Object[]{"qw",1});  
+    }  
+  
+  /* 
+ 
+   * 下面是3个方法 
+ 
+   */  
+  
+    public void speak()  
+  
+  {  
+  
+         System.out.println("调用的没有参数的方法");  
+  
+  }  
+    public void speak(String s)  
+    {  
+       System.out.println("调用有一个参数的方法,参数为:"+s);  
+    }  
+    public void speak(String s,int i)  
+    {  
+        System.out.println("调用有两个参数的方法,参数为,参数为:"+s+"和" +i);  
+    }  
+  
+   
+  
+    / /main函数  
+  
+    public static void main(String[] args) throws Exception  
+    {     
+  
+               movingInvokeTest.do_test("speak",1);  
+    }  
+  
+} 

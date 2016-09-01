@@ -1,0 +1,41 @@
+Windows启动时通常会有一大堆程序自动启动。不要以为管好了“开始→程序→启动”菜单就万事大吉，实际上，在Windows XP/2K中，让Windows自动启动程序的办法很多，下文告诉你最重要的两个文件夹和八个注册键。 
+　　 
+　　一、当前用户专有的启动文件夹 
+　　 
+　　这是许多应用软件自动启动的常用位置，Windows自动启动放入该文件夹的所有快捷方式。用户启动文件夹一般在：\Documents and Settings\<用户名字>\「开始」菜单\程序\启动，其中“<用户名字>”是当前登录的用户帐户名称。 
+　　 
+　　二、对所有用户有效的启动文件夹 
+　　 
+　　这是寻找自动启动程序的第二个重要位置，不管用户用什么身份登录系统，放入该文件夹的快捷方式总是自动启动——这是它与用户专有的启动文件夹的区别所在。该文件夹一般在：\Documents and Settings\All Users\「开始」菜单\程序\启动。 
+　　 
+　　三、Load注册键 
+　　 
+　　介绍该注册键的资料不多，实际上它也能够自动启动程序。位置：HKEY_CURRENT_USER\Software\Microsoft\WindowsNT\CurrentVersion\Windows\load。 
+　　 
+　　四、Userinit注册键 
+　　 
+　　位置：HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsNT\CurrentVersion\Winlogon\Userinit。这里也能够使系统启动时自动初始化程序。通常该注册键下面有一个userinit.exe，如图一，但这个键允许指定用逗号分隔的多个程序，例如“userinit.exe,OSA.exe”（不含引号）。 
+　　 
+　　五、Explorer\Run注册键 
+　　 
+　　和load、Userinit不同，Explorer\Run键在HKEY_CURRENT_USER和HKEY_LOCAL_MACHINE下都有，具体位置是：HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer\Run，和HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer\Run。 
+　　 
+　　六、RunServicesOnce注册键 
+　　 
+　　RunServicesOnce注册键用来启动服务程序，启动时间在用户登录之前，而且先于其他通过注册键启动的程序。RunServicesOnce注册键的位置是：HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\RunServicesOnce，和HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\RunServicesOnce。 
+　　 
+　　七、RunServices注册键 
+　　 
+　　RunServices注册键指定的程序紧接RunServicesOnce指定的程序之后运行，但两者都在用户登录之前。RunServices的位置是：HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\RunServices，和HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\RunServices。 
+　　 
+　　八、RunOnce\Setup注册键 
+　　 
+　　RunOnce\Setup指定了用户登录之后运行的程序，它的位置是：HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\RunOnce\Setup，和HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce\Setup。 
+　　 
+　　九、RunOnce注册键 
+　　 
+　　安装程序通常用RunOnce键自动运行程序，它的位置在HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce和HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\RunOnce。HKEY_LOCAL_MACHINE下面的RunOnce键会在用户登录之后立即运行程序，运行时机在其他Run键指定的程序之前。HKEY_CURRENT_USER下面的RunOnce键在操作系统处理其他Run键以及“启动”文件夹的内容之后运行。如果是XP，你还需要检查一下HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnceEx。 
+　　 
+　　十、Run注册键 
+　　 
+　　Run是自动运行程序最常用的注册键，位置在：HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run，和HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Run。HKEY_CURRENT_USER下面的Run键紧接HKEY_LOCAL_MACHINE下面的Run键运行，但两者都在处理“启动”文件夹之前。

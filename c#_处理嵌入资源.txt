@@ -1,0 +1,20 @@
+嵌入的资源
+
+---------------------
+
+右键资源管理器——添加现有项目(添加一个名为123的jpg图片)
+
+选中图片，在属性栏中把“生成操作”设为“嵌入的资源”
+
+代码：
+
+System.Reflection.Assembly thisExe;
+thisExe = System.Reflection.Assembly.GetExecutingAssembly();
+
+ //WindowsApplication1为程序集的命名空间
+//123.jpg为图片的名字
+System.IO.Stream file = thisExe.GetManifestResourceStream 
+                     
+                      ("WindowsApplication1.123.jpg");
+
+this.pictureBox1.Image = Image.FromStream(file);

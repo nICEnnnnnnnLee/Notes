@@ -1,0 +1,11 @@
+Windows下传统的抓包工具如Wireshark/Ethereal不能对本地程序之间的网络通信抓包，如果即想要对本地通信进行抓包可如下设置。
+http://wiki.wireshark.org/CaptureSetup/Loopback详细介绍了如何操作但比较麻烦,其实只要最后一步就可以实现了：
+在命令行提示下面输入: route add 192.168.0.102 mask 255.255.255.255 192.168.0.1 metric 1 就这么简单！其中192.168.0.102是自己的IP,192.168.0.1是自己的网关
+route delete 192.168.0.102
+
+An other alternative is to add a route to your local machine going through the network gateway:
+route add <your_IP> mask 255.255.255.255 <the_gateway> metric 1
+with <your_IP> being different from 127.0.0.1. It should (has to) be the result of ipconfig command (ip address field) <the_gateway> has to be the default gateway field taken from ipconfig /all result.
+Doing so, every network traffic from your machine to itself will use the physical network interface, it will then go to the gateway, back to you. Therefor, you will see each packet twice, but it can be filtered on the view.
+Be careful, since your machine will use the actual network to talk to itself, it may overload the network. It may be wise to remove the new route once you are done with the tests:
+route delete <your_IP>This is translated from French, based on the method described here.

@@ -1,0 +1,21 @@
+Runtime.getRuntime().exec()的使用 (2007-06-29 09:23:07)转载▼
+分类： 职业发展
+ 今天发现了Runtime.getRuntime().exec()新的使用方法：
+//测试结果：能打开，但是需要关闭文件才能中止程序。
+//String[] cmd = {"notepad.exe","F:\\long_cennect.txt"};
+//Process process = Runtime.getRuntime().exec(cmd);
+
+//测试结果：能打开文件，并且与程序独立，不关闭文件 程序也继续向下执行。
+// /E:ON 允许cmd扩展  /c 指之后的都是字符串  测试时把E改成F，执行结果是一样的。
+Process process = Runtime.getRuntime().exec("cmd /E:ON /c start F:\\long_cennect.txt");
+//Process process = Runtime.getRuntime().exec("cmd.exe /c start F:\\long_cennect.txt"); 用这句话测试结果和上句话是一样的。
+InputStreamReader inputStr = new InputStreamReader(process.getInputStream());
+BufferedReader br = new BufferedReader(inputStr);
+String temp = "";
+while((temp = br.readLine())!= null){
+System.out.println(temp);
+}
+
+process.destroy();
+br.close();
+inputStr.close();

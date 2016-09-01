@@ -1,0 +1,28 @@
+
+using System.Runtime.InteropServices;
+
+//GetDesktopWindow的声明
+[DllImport("user32.dll")]
+public static extern IntPtr GetDesktopWindow();
+ 
+[DllImport("user32.dll")]
+public static extern IntPtr GetWindowDC(IntPtr hwnd);
+
+
+IntPtr hDCDesktop = GetWindowDC(GetDesktopWindow());?
+Graphics g = Graphics.FromHdc(hDCDesktop);//创建Graphics,这样才会有效。
+//获得当前屏幕的分辨率
+Screen scr = Screen.PrimaryScreen;
+Rectangle rc = scr.Bounds;
+int iWidth = rc.Width;
+int iHeight = rc.Height;
+//获得中心点并画圆
+Point center = new Point(iWidth / 2, iHeight / 2);
+int r = 1;//点的半径大小
+Rectangle rec = new Rectangle(center.X - r, center.Y - r, 2 * r, 2 * r);
+//Rectangle rec = new Rectangle(center.X-r,center.Y-r,center.X+r,center.Y+r);
+SolidBrush brush = new SolidBrush(Color.Red);
+Pen pen = new Pen(brush);
+g.FillEllipse(brush, rec);
+g.DrawEllipse(pen, rec);
+g.Dispose();

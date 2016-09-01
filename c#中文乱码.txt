@@ -1,0 +1,18 @@
+c#读取到的TXT文件中的中文乱码怎么解决
+2013-08-01 18:41chenzhifan3 | 分类：C#/.NET | 浏览3191次
+代码如下
+string filename="";
+            string str1 = "";
+            if (this.openFileDialog1.ShowDialog() == DialogResult.OK)//获得txt文件
+            {
+                filename = this.openFileDialog1.FileName;
+            }
+            StreamReader sr = File.OpenText(filename);//读取文件
+            str1 = sr.ReadToEnd();//把txt文件中的内容赋值给str1字符串
+我想要解决以后的代码，不要给我看解决方案了，我看了很多解决方案就是弄不起来，也不知道那里错了，所以求大神帮我直接解决了吧
+
+StreamReader sr = File.OpenText(filename);
+改为
+StreamReader sr = new StreamReader(filename,Encoding.Default);
+StreamReader sr = new StreamReader(filename, Encoding.UTF8);
+主要UTF8

@@ -1,0 +1,31 @@
+
+这个问题其实很简单，你只要遍历如下注册表位置就可以了。当然，vista64也是适合的，虽然你找不到如下的注册表位置，因为Wow64已经帮你做了转换了。
+
+ 
+
+
+遍历HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall下的内容，
+
+
+但是要注意有DisplayName键的才显示出来。DisplayName的内容就是显示的名称。
+
+
+
+
+Windows中，已安装程序列表存储在注册表中，位置是：
+LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Uninstall\<ProductCode>
+两点说明：
+ProductCode的位置应该替换上工程的Product Code，样子是这样的（包括花括号）：{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}。
+在64位机器上，除了上述位置之外，微软又增加了一个32位镜象：LOCAL_MACHINE\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\<ProductCode>，用于存放32位程序（实际上大部分程序都存放在这里）。可以看出除了红字部分之外，路径结构是相同的。两个地方都应该检查。
+安装程序是.msi，通常还会有一个Setup.exe，后者是用在没有安装Windows Installer的机器上，相当于提供一个临时的安装服务；MSI文件是真正存放数据的地方，在安装了Windows Installer的机器上可以直接双击运行。双击打开实质上是调用了这样一个命令：
+msiexec /i <name>.msi
+这个命令可以加很多参数，比如：
+/L*v <log path>，这个我在其他博客文中介绍过，用来在<log path>指定的位置上存放安装过程中的日志。
+/quiet，静默模式，完全不出现可见界面（没有进度条、出错直接退出、如果有必需要确认的地方也直接退出）
+/passive，被动模式，全自动安装（有进度条，其他同静默模式）
+
+如果要通过命令行完成卸载，则可以使用下面的命令：
+msiexec /x <ProductCode>
+这个ProductCode和第一段中提到的是同一个。如果使用Visual Studio自带的Setup Project生成安装器的话，可以通过Setup Project的属性设置该产品代码。
+虽然也可以不使用ProductCode而使用msiexec /x <name>.msi来卸载，但很可能无法卸载成功。Windows特别是Vista似乎是要求卸载时使用的msi文件必需与安装时使用的在版本上完全相同，否则就会提示说“Another version of ...”什么什么的。而使用<ProductCode>，Windows就会找出不知道在什么地方保存的一个安装时使用的MSI文件的副本来完成卸载。
+上文说到的参数也同样适用。

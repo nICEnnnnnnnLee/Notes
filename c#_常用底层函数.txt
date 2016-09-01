@@ -1,0 +1,22 @@
+http://developer.51cto.com/art/201104/257428.htm
+
+//设置钩子  
+[DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]  
+public static extern int SetWindowsHookEx(int idHook, HookProc lpfn, IntPtr hInstance, int threadId);  
+[DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]  
+//抽掉钩子  
+public static extern bool UnhookWindowsHookEx(int idHook);  
+[DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]  
+//调用下一个钩子  
+public static extern int CallNextHookEx(int idHook, int nCode, IntPtr wParam, IntPtr lParam);  
+//取得模块句柄   
+[DllImport("kernel32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]  
+private static extern IntPtr GetModuleHandle(string lpModuleName);  
+//寻找目标进程窗口 [DllImport("USER32.DLL")]  
+public static extern IntPtr FindWindow(string lpClassName,  
+string lpWindowName);  
+//设置进程窗口到最前 [DllImport("USER32.DLL")]  
+public static extern bool SetForegroundWindow(IntPtr hWnd);  
+//模拟键盘事件 [DllImport("User32.dll")]  
+public static extern void keybd_event(Byte bVk, Byte bScan, Int32 dwFlags, Int32 dwExtraInfo);//释放按键的常量  
+private const int KEYEVENTF_KEYUP =2; 

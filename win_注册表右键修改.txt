@@ -1,0 +1,29 @@
+http://blog.csdn.net/changsha2011/article/details/7459378
+
+转自：http://blog.csdn.net/zwhfyy/article/details/3732456
+
+一： 开始，运行里面输入： 
+
+regsvr32 /u igfxpph.dll 
+确定 ok了 
+注意/u两边各有一个空格的，或者直接复制进去运行吧 
+二：清除鼠标右键菜单中多余项的操作步骤如下： 
+（1）在系统桌面上单击“开始→运行”项。 
+（2）在随后出现的窗口中的“打开”栏中键入regedit并单击“确定”按钮运行注册表编辑器。 
+(3)在注册表的HKEY_CURRENT_USER/Software/Microsoft/Internet Explorer/MenuExt下都有 
+以上是清除IE中右键的方法 
+三：随着安装软件的不断增多，右键菜单也越来越长，臃肿不堪。这样，本来以快捷菜单自居的右键菜单使用起来反而并不快捷。别急，以下我们就为右键菜单“减负”。 
+
+（一）折叠右键二级菜单 
+有些软件在右键菜单中有多个命令选项，比如安装WinRAR后，就有数个项目会附加到标准文件和文件夹的右键菜单中。以下设置能够将WinRAR右键菜单全部项目压缩到“WinRAR”子菜单中(操作以WinRAR3.30为例)：在WinRAR主窗口，单击“选项”菜单中的“设置”，单击“综合”选项卡，选中“层叠右键关联菜单”复选框，单击“确定”按钮。如果你的电脑右键菜单还有其他软件的多个选项，就由你自己研究将它们组合为右键子菜单的方法吧！ 
+（二）删除不常用菜单项 
+或许右键菜单中的有些选项你并不常用，或者，有些软件已被删除，但其右键菜单中的选项却仍占用着屏幕空间。要删除这些无用的右键菜单项，请按下述方法操作： 
+
+1. 单击Windows的“开始”菜单，单击“运行”，在“打开”框中键入“regedit”，单击“确定”按钮，打开“注册表编辑器”窗口。 
+
+2. 展开“HKEY_CLASSES_ROOT/*/shellex/ContextMenuHandlers”分支，在其下找到要删除的无用项，然后右键单击该项，再单击“删除”将其删除即可清除右键菜单中的对应选项。对于仅在文件夹右键菜单中才有的选项，可到HKEY_CLASSES_ROOT/Directory/shellHKEY_CLASSES_ROOT/ 
+Directory/shellex/ContextMenuHandlers分支下查找。有时HKEY_CLASSES_ROOT/Folder/shell和HKEY_CLASSES_ROOT 
+/Folder/shellex/ContextMenuHandlers分支下也有右键菜单中的选项。 
+
+3.关闭“注册表编辑器”窗口。 四：清除任何显卡生成的桌面右键菜单方法修改注册表文件。 
+大家可以单击“开始|运行”，然后键入“regedit”并确认运行注册表编辑器，依次单击展开“HKEY_CLASSES_ROOT////Directory////Background////shellex////ContextMenuHandlers”键值，删除其中的“igfxcui”键（这个是显卡的），然后重新启动系统或者注销即可删除桌面菜单上的那三个选项。基本是保留个new就好

@@ -1,0 +1,2 @@
+图像		GDI/GDI+
+多媒体 使用DirectX/PrenGL

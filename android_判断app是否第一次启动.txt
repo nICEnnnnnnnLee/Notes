@@ -1,0 +1,30 @@
+思想就是利用SharedPreferences进行判断：
+
+SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+通过名称，得到一个SharedPreferences，顾名思义，这个Preferences是共享的，共享的范围据现在同一个Package中，这里 面说所的Package和Java里面的那个Package不同，貌似这里面的Package是指在AndroidManifest.xml文件中的
+
+SharedPreferences setting = getSharedPreferences(SHARE_APP_TAG, 0);
+Boolean user_first = setting.getBoolean("FIRST",true);
+if(user_first){//第一次
+      setting.edit().putBoolean("FIRST", false).commit();
+      Toast.makeText(MainActivity.this, "第一次", Toast.LENGTH_LONG).show();
+ }else{
+     Toast.makeText(MainActivity.this, "不是第一次", Toast.LENGTH_LONG).show();
+}
+
+
+1、从manifest中读取到android:versionCode，
+2、然后将其与preference中的versioncode做比较，
+3、当preference中的versioncode小于manifest中的版本号时，则代表此次启动为该版本的首次启动，
+1
+代码如下
+PackageInfo info = getPackageManager().getPackageInfo(PACKAGE_NAME, 0);
+int currentVersion = info.versionCode;
+SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+int lastVersion = prefs.getInt(VERSION_KEY, 0);
+if (currentVersion > lastVersion) {
+     //如果当前版本大于上次版本，该版本属于第一次启动
+     ......   
+     //将当前版本写入preference中，则下次启动的时候，据此判断，不再为首次启动
+     prefs.edit().putInt(VERSION_KEY,currentVersion).commit();
+}

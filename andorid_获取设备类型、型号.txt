@@ -1,0 +1,8 @@
+
+        System.out.println("产品型号：" + android.os.Build.MODEL);
+
+	System.out.println("厂家名称: " + android.os.Build.MANUFACTURER);
+
+
+adb pull system/build.prop C:\build.prop
+然后解析该文件

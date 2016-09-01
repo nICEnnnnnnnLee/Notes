@@ -1,0 +1,89 @@
+http://kevin19900306.iteye.com/blog/1206534
+http://www.cnblogs.com/slowhand/archive/2013/05/07/3065209.html
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using System.Speech.Synthesis;
+using System.Speech.Recognition;
+using System.Globalization;
+//using System.Speech.Recognition.SpeechRecognitionEngine;
+namespace SpeakTest
+{
+    public partial class Form1 : Form
+    {
+        SpeechRecognitionEngine _recognizer;// = new SpeechRecognitionEngine();
+        public Form1()
+        {
+            InitializeComponent();
+            /*{//文字转语音
+                SpeechSynthesizer ssyer = new SpeechSynthesizer();
+                ssyer.SpeakCompleted += new EventHandler<SpeakCompletedEventArgs>(ssyer_SpeakCompleted);
+                ssyer.SetOutputToWaveFile("E:\\UsersVoice.wav");
+                ssyer.SpeakAsync("早上好，你吃了吗？");//念完时
+                //ssyer.SetOutputToWaveFile("E:\\UsersVoice2.wav");
+                //ssyer.SpeakAsync("你好");
+            }*/
+            {//语音转文字
+
+                CultureInfo myCIintl = new CultureInfo("zh-CN");//
+                foreach (RecognizerInfo config in SpeechRecognitionEngine.InstalledRecognizers())//获取所有语音引擎  
+                {
+                    if (config.Culture.Equals(myCIintl))//&& config.Id == "MS-2052-80-DESK"
+                    {
+                        _recognizer = new SpeechRecognitionEngine(config);
+                        break;
+                    }//选择识别引擎
+                }
+                if (_recognizer != null)
+                {
+                    //_recognizer.SpeechRecognized += new EventHandler<SpeechRecognizedEventArgs>(recognizer_SpeechRecognized);
+                    _recognizer.RecognizeCompleted += new EventHandler<RecognizeCompletedEventArgs>(recognizer_Completed);
+                    _recognizer.SetInputToWaveFile("E:\\UsersVoice.wav");
+                    {
+                        string[] fg = { "早上好", "你吃了吗", "早上好，你吃了吗" };
+                        GrammarBuilder grammarBuilder = new GrammarBuilder();
+                        grammarBuilder.Append(new Choices(fg));
+                        Grammar customGrammar = new Grammar(grammarBuilder);
+                        _recognizer.UnloadAllGrammars();
+                        _recognizer.LoadGrammar(customGrammar);
+                    }
+                    {
+                        DictationGrammar dictationGrammar = new DictationGrammar();
+                        //_recognizer.LoadGrammar(dictationGrammar);
+                    }
+                    _recognizer.RecognizeAsync(RecognizeMode.Multiple);
+                }
+                else
+                {
+                    MessageBox.Show("泥煤");
+                }
+            }
+            
+        }
+
+        public void ssyer_SpeakCompleted(object sender, SpeakCompletedEventArgs e)
+        {
+            this.label1.Text = "-------------";
+        }
+        private void recognizer_SpeechRecognized(object sender, SpeechRecognizedEventArgs e)
+        {
+            //识别出结果完成的动作，通常把识别结果传给某一个控件  
+            string text = e.Result.Text;
+            label1.Text += text;
+        }
+        private void recognizer_Completed(object sender, RecognizeCompletedEventArgs e)
+        {
+            //识别出结果完成的动作，通常把识别结果传给某一个控件  
+            string text = e.Result.Text;
+            MessageBox.Show(text);
+            label1.Text = text;
+        }
+    }
+}
+

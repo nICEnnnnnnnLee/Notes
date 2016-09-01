@@ -1,0 +1,137 @@
+	/** Dom方式，创建 XML  */
+	public String domCreateXML() {
+		String xmlWriter = null;
+		
+		Person []persons = new Person[3];		// 创建节点Person对象
+		persons[0] = new Person(1, "sunboy_2050", "http://blog.csdn.net/sunboy_2050");
+		persons[1] = new Person(2, "baidu", "http://www.baidu.com");
+		persons[2] = new Person(3, "google", "http://www.google.com");
+		
+		try {
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			Document doc = builder.newDocument();
+			
+			Element eleRoot = doc.createElement("root");
+			eleRoot.setAttribute("author", "homer");
+			eleRoot.setAttribute("date", "2012-04-26");
+			doc.appendChild(eleRoot);
+			
+			int personsLen = persons.length;
+			for(int i=0; i<personsLen; i++) {
+				Element elePerson = doc.createElement("person");
+				eleRoot.appendChild(elePerson);
+				
+				Element eleId = doc.createElement("id");
+				Node nodeId = doc.createTextNode(persons[i].getId() + "");
+				eleId.appendChild(nodeId);
+				elePerson.appendChild(eleId);
+
+				Element eleName = doc.createElement("name");
+				Node nodeName = doc.createTextNode(persons[i].getName());
+				eleName.appendChild(nodeName);
+				elePerson.appendChild(eleName);
+
+				Element eleBlog = doc.createElement("blog");
+				Node nodeBlog = doc.createTextNode(persons[i].getBlog());
+				eleBlog.appendChild(nodeBlog);
+				elePerson.appendChild(eleBlog);
+			}
+			
+			
+			Properties properties = new Properties();
+			properties.setProperty(OutputKeys.INDENT, "yes");
+			properties.setProperty(OutputKeys.MEDIA_TYPE, "xml");
+			properties.setProperty(OutputKeys.VERSION, "1.0");
+			properties.setProperty(OutputKeys.ENCODING, "utf-8");
+			properties.setProperty(OutputKeys.METHOD, "xml");
+			properties.setProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+			
+			TransformerFactory transformerFactory = TransformerFactory.newInstance();
+			Transformer transformer = transformerFactory.newTransformer();
+			transformer.setOutputProperties(properties);
+			
+			DOMSource domSource = new DOMSource(doc.getDocumentElement());
+			OutputStream output = new ByteArrayOutputStream();
+			StreamResult result = new StreamResult(output);
+			transformer.transform(domSource, result);
+			
+			xmlWriter = output.toString();
+			
+		} catch (ParserConfigurationException e) {		// factory.newDocumentBuilder
+			e.printStackTrace();
+		} catch (DOMException e) {						// doc.createElement
+			e.printStackTrace();
+		} catch (TransformerFactoryConfigurationError e) {		// TransformerFactory.newInstance
+			e.printStackTrace();
+		} catch (TransformerConfigurationException e) {		// transformerFactory.newTransformer
+			e.printStackTrace();
+		} catch (TransformerException e) {				// transformer.transform
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		savedXML(fileName, xmlWriter.toString());
+		
+		return xmlWriter.toString();
+	}
+
+=============================================
+	/** Dom方式，解析 XML  */
+	public String domResolveXML() {
+		StringWriter xmlWriter = new StringWriter();
+		
+		InputStream is= readXML(fileName);
+		try {
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			Document doc = builder.parse(is);
+
+			doc.getDocumentElement().normalize();
+			NodeList nlRoot = doc.getElementsByTagName("root");
+			Element eleRoot = (Element)nlRoot.item(0);
+			String attrAuthor = eleRoot.getAttribute("author");
+			String attrDate = eleRoot.getAttribute("date");
+			xmlWriter.append("root").append("\t\t");
+			xmlWriter.append(attrAuthor).append("\t");
+			xmlWriter.append(attrDate).append("\n");
+			
+			NodeList nlPerson = eleRoot.getElementsByTagName("person");
+			int personsLen = nlPerson.getLength();
+			Person []persons = new Person[personsLen];
+			for(int i=0; i<personsLen; i++) {
+				Element elePerson = (Element) nlPerson.item(i);		// person节点
+				Person person = new Person();						// 创建Person对象
+				
+				NodeList nlId = elePerson.getElementsByTagName("id");
+				Element eleId = (Element)nlId.item(0);
+				String id = eleId.getChildNodes().item(0).getNodeValue();
+				person.setId(Integer.parseInt(id));
+				
+				NodeList nlName = elePerson.getElementsByTagName("name");
+				Element eleName = (Element)nlName.item(0);
+				String name = eleName.getChildNodes().item(0).getNodeValue();
+				person.setName(name);
+				
+				NodeList nlBlog = elePerson.getElementsByTagName("blog");
+				Element eleBlog = (Element)nlBlog.item(0);
+				String blog = eleBlog.getChildNodes().item(0).getNodeValue();
+				person.setBlog(blog);
+				
+				xmlWriter.append(person.toString()).append("\n");
+				persons[i] = person;
+			}
+			
+		} catch (ParserConfigurationException e) {		// factory.newDocumentBuilder
+			e.printStackTrace();
+		} catch (SAXException e) {		// builder.parse
+			e.printStackTrace();
+		} catch (IOException e) {		// builder.parse
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return xmlWriter.toString();
+	}

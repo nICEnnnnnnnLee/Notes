@@ -1,0 +1,89 @@
+Microsoft.Win32.RegistryKey retkey = Microsoft.Win32.Registry.CurrentUser.
+OpenSubKey("software", true).CreateSubKey("ZHY").CreateSubKey("ZHY.INI").
+CreateSubKey("");
+retkey.SetValue("UserName", "MySoft");
+
+
+基于C#操作注册表
+摘要
+C#对注册表操作进行了封装；对Windows注册表操作变得异常简单。本程序实现了对Putty注册表的创建，修改，删除等操作，是一个不错的应用范例。
+介绍
+C#的Registry类提供了Windows注册表根项的RegistryKey对象，并提供静态访问项/值的方法。例如，对putty而言，我们的操作的根可选成：
+RegistryKey rkRoot =
+                        Registry.CurrentUser.OpenSubKey("Software").OpenSubKey("SimonTatham").OpenSubKey("PuTTY").OpenSubKey("Sessions");
+ 
+对session进行管理是程序的主要目标。
+RegistryKey表示Windows注册表中的项级节点；对值操作需要使用其方法，主要是：
+OpenSubKey
+CreateSubKey
+SetValue
+GetValue
+Close
+修改项值
+实例代码将所有基于rlogin的会话用户/密码改为root/123456。
+                    const string key1_name = "UserName";
+                    const string key2_name = "UserPasswd";
+ 
+                    RegistryKey rkRoot =
+                        Registry.CurrentUser.OpenSubKey("Software").OpenSubKey("SimonTatham").OpenSubKey("PuTTY").OpenSubKey("Sessions");
+                    for (int i = 0; i < listBox4.SelectedItems.Count; i++)                                       
+                    {
+                        string ss = (string)listBox4.SelectedItems[i];
+                        listBox1.Items.Add("handling session:" + ss);
+                        RegistryKey rkSession = rkRoot.OpenSubKey(ss, RegistryKeyPermissionCheck.ReadWriteSubTree);
+                        //判断是否为rlogin
+                        if (val_protocol == (string)rkSession.GetValue(key_protocol))
+                        {
+                            //修改用户名/密码
+                            rkSession.SetValue(key1_name, textBox1.Text);
+                            rkSession.SetValue(key2_name, textBox2.Text);
+                        }
+                        else
+                        {
+                            listBox1.Items.Add("does not handle " + ss + " because it is not a rlogin type session.");
+                        }
+                        rkSession.Close();
+                    }
+创建项值
+本程序支持将注册表dump出来，并支持load，实际是创建。
+                        string sn = (string)listBox3.SelectedItems[i];
+                        RegistryKey rkSn = rkRoot.OpenSubKey(sn, RegistryKeyPermissionCheck.ReadWriteSubTree);
+                        listBox1.Items.Add("handling " + sn);
+                        ArrayList al = (ArrayList)session_datas[sn];
+                        for (int j = 0; j < al.Count; j++)
+                        {
+                            ArrayList items = (ArrayList)al[j];
+                            string subkey = (string)(items[0]);
+                            RegistryValueKind rvk = (RegistryValueKind)items[1];
+                            string v = (string)items[2];
+                            if (rvk == RegistryValueKind.DWord)
+                            {                               
+                                int dv = Int32.Parse(v, NumberStyles.HexNumber);
+                                rkSn.SetValue(subkey, dv, rvk);
+                            }
+                            else
+                            {                               
+                                rkSn.SetValue(subkey, v, rvk);
+                            }
+                        }
+                        rkSn.Close();
+删除键值
+                if (DialogResult.Yes == MessageBox.Show("Please backup your entries first in Dump Tab, have you done this job?", "Confirm", MessageBoxButtons.YesNo))
+                {
+                    RegistryKey rkRoot =
+                        Registry.CurrentUser.OpenSubKey("Software").OpenSubKey("SimonTatham").OpenSubKey("PuTTY").OpenSubKey("Sessions", RegistryKeyPermissionCheck.ReadWriteSubTree);
+                    for (int i = 0; i < listBox4.SelectedItems.Count; i++)
+                    {
+                       string ss = (string)listBox4.SelectedItems[i];
+                        listBox1.Items.Add("handling session:" + ss);                 
+                        rkRoot.DeleteSubKey(ss);
+                        listBox1.Items.Add(ss + " removed.");
+                        this.listBox4.Items.Remove(listBox4.SelectedItems[i]);
+                       
+                    }
+                    listBox1.Items.Add("job done.");
+                    rkRoot.Close();
+                }
+ 
+结束语
+基于C#操作注册表非常方便；无须详细说明。

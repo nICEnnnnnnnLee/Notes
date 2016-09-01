@@ -1,0 +1,21 @@
+如果你是用SqlDataAdapter填充DataSet，然后绑定给DataGridView，那么当你在界面上修改了值，只需要调用SqlDataAdapter的Update方法就可以完成更新。
+关键代码：
+1、在Form_Load里：
+SqlConnection cnn=new SqlConnection(连接字符串);
+adp=new SqlDataAdapter("select * from user", cnn);
+SqlCommandBuilder bd=new SqlCommandBuilder(adp);
+dt=new DataTable();
+adp.Fill(dt);
+this.dataGridView1.DataSource=dt;
+2、需要更新时：
+adp.Update(dt);
+ 
+第二种方法：
+不用SqlDataAdapter，直接用SqlCommand。
+SqlCommand cmd=new SqlCommand("update user set name=@name where id=@id", cnn);
+cmd.Parameters.AddWithValue("@id", 具体的id值);
+cmd.Parameters.AddWithValue("@name", 具体的name值);
+cnn.Open();
+cmd.ExecuteNonQuery();
+cnn.Close();
+注：代码没按三层做。

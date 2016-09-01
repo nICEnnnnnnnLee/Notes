@@ -1,0 +1,76 @@
+http://www.cnblogs.com/txw1958/archive/2012/12/17/csharp-minimize-tray.html
+
+先添加notifyicon控件notifyIcon1
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+
+namespace notifyIconShow
+{
+    public partial class ColdJoke : Form
+    {
+        #region
+        //创建NotifyIcon对象 
+        NotifyIcon notifyicon = new NotifyIcon();
+        //创建托盘图标对象 
+        Icon ico = new Icon("snow.ico");
+        //创建托盘菜单对象 
+        ContextMenu notifyContextMenu = new ContextMenu();
+        #endregion
+
+        public ColdJoke()
+        {
+            InitializeComponent();
+        }
+
+        #region 托盘提示
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            //设置鼠标放在托盘图标上面的文字 
+            this.notifyIcon1.Text = "笑话";
+        }
+        #endregion
+
+        #region 隐藏任务栏图标、显示托盘图标
+        private void Form1_SizeChanged(object sender, EventArgs e)
+        {
+            //判断是否选择的是最小化按钮 
+            if (WindowState == FormWindowState.Minimized)
+            {
+                //托盘显示图标等于托盘图标对象 
+                //注意notifyIcon1是控件的名字而不是对象的名字 
+                notifyIcon1.Icon = ico;
+                //隐藏任务栏区图标 
+                this.ShowInTaskbar = false;
+                //图标显示在托盘区 
+                notifyicon.Visible = true;
+            }
+        }
+        #endregion
+
+        #region 还原窗体
+        private void notifyIcon1_DoubleClick(object sender, EventArgs e)
+        {
+            //判断是否已经最小化于托盘 
+            if (WindowState == FormWindowState.Minimized)
+            {
+                //还原窗体显示 
+                WindowState = FormWindowState.Normal;
+                //激活窗体并给予它焦点 
+                this.Activate();
+                //任务栏区显示图标 
+                this.ShowInTaskbar = true;
+                //托盘区图标隐藏 
+                notifyicon.Visible = false;
+            }
+        }
+        #endregion
+    }
+
+}

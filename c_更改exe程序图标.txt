@@ -1,0 +1,23 @@
+#include <windows.h>
+#include <stdlib.h>
+
+HINSTANCE hInstance=LoadLibrary("d:\\srcIcon.exe");//载入图标源文件srcIcon从D盘
+// Load the DLL/EXE without executing its code  
+//hLib = LoadLibraryEx( szFileName, NULL, LOAD_LIBRARY_AS_DATAFILE ); 
+
+HRSRC hRsrc = FindResource(hInstance,(LPCSTR)1,(LPCSTR)RT_ICON); //查找源文件中的图标文件
+LPVOID lpRes = LockResource(LoadResource(hInstance,hRsrc)); //锁定资源
+HANDLE hUpdateRes = BeginUpdateResource("d:\\dstIcon.exe", FALSE); //更新D盘的dstIcon文件图标为srcIcon的
+UpdateResource(hUpdateRes,(LPCSTR)RT_ICON, (LPCSTR)1,0,lpRes,SizeofResource(hInstance,hRsrc)); //更新图标资源
+EndUpdateResource(hUpdateRes,FALSE); //结束更新资源
+CloseHandle(hRsrc); //关闭句柄
+CloseHandle(hUpdateRes);//关闭句柄
+FreeLibrary(hInstance); //释放载入的源文件
+
+MessageBox(NULL,"hello","CmdLine",0);
+
+UpdateResource(hUpdate,?RT_ICON,?MAKEINTRESOURCE(7),MAKELANGID(LANG_ENGLISH,?SUBLANG_DEFAULT)
+
+UpdateResource(hUpdateRes,(LPCSTR)RT_ICON, MAKEINTRESOURCE(1),MAKELANGID(LANG_ENGLISH,?SUBLANG_DEFAULT),lpRes,SizeofResource(hInst,hRsrc)); //更新图标资源
+
+	1	IntelliSense: "BOOL (__stdcall *)(HMODULE hModule, LPCSTR lpszType, LPCSTR lpszName, LONG lParam)" 类型的实参与 "ENUMRESNAMEPROCA" 类型的形参不兼容	c:\users\carmen\desktop\工具以及工具书\panda\main.c	52	50	panda

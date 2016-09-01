@@ -1,0 +1,20 @@
+http://blog.csdn.net/MingoJiang/article/details/7908818
+
+HOOK API 跳转大法（上）
+http://blog.sina.com.cn/s/blog_593abc890100yjlr.html
+
+========================
+ API Hook完全手册
+http://blog.csdn.net/wxl1986622/article/details/7270670
+
+《windows核心编程》
+《windows循序渐进编程》
+Windows API编程  
+出版社　： 清华大学出版社 
+系列名　：程序员书库 
+作者　　： 冉林仓/  
+http://www.huachu.com.cn/itbook/itbookinfo.asp?lbbh=BA--961354
+Windows应用程序捆绑核心编程 
+作者：张正秋 
+来源：清华大学出版社 
+http://book.csdn.net/bookfiles/212/

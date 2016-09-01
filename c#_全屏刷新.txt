@@ -1,0 +1,73 @@
+http://bbs.csdn.net/topics/390369223
+
+http://blog.sina.com.cn/s/blog_4b44e1c00100aj3n.html
+
+ ///////////////////////////刷新桌面图标/////////////////////////////
+ 实现桌面刷新方法一：
+ //根据桌面窗口标题"Program Manager"找到相应的窗口句柄
+ HWND   hwndParent   =   ::FindWindow(L"Progman",L"Program Manager");
+ ASSERT(hwndParent);
+ HWND   hwndSHELLDLL_DefView   =   ::FindWindowEx(hwndParent,NULL,L"SHELLDLL_DefView",     NULL);
+ ASSERT(hwndSHELLDLL_DefView);
+ HWND   hwndSysListView32   =   ::FindWindowEx(hwndSHELLDLL_DefView,NULL,L"SysListView32",L"FolderView");  
+ ASSERT(hwndSysListView32);     
+ //发送按键F5消息刷新桌面
+ ::PostMessage(hwndSysListView32,WM_KEYDOWN,VK_F5,0);
+
+
+
+[DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
+        public static extern bool RedrawWindow(IntPtr hwnd, IntPtr rcUpdate, IntPtr hrgnUpdate, int flags);
+
+
+RedrawWindow(IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, 0x85);
+
+
+
+C#
+Declaration:
+
+using System.Runtime.InteropServices;
+
+public abstract class WinAPI
+{
+        [DllImport("user32.dll")]
+        public static extern Boolean RedrawWindow(IntPtr hWnd, IntPtr lpRectUpdate, IntPtr hrgnUpdate, UInt32 flags);
+
+        // WinAPI RECT struct
+        public struct Rect
+        {
+            public Int32 left;
+            public Int32 top;
+            public Int32 right;
+            public Int32 bottom;
+        };
+
+        // RedrawWindow() flags
+        public enum RedrawWindowFlags
+        {
+            RDW_INVALIDATE      = 0x0001,
+            RDW_INTERNALPAINT   = 0x0002,
+            RDW_ERASE           = 0x0004,
+
+            RDW_VALIDATE        = 0x0008,
+            RDW_NOINTERNALPAINT = 0x0010,
+            RDW_NOERASE         = 0x0020,
+
+            RDW_NOCHILDREN      = 0x0040,
+            RDW_ALLCHILDREN     = 0x0080,
+
+            RDW_UPDATENOW       = 0x0100,
+            RDW_ERASENOW        = 0x0200,
+
+            RDW_FRAME           = 0x0400,
+            RDW_NOFRAME         = 0x0800
+        };
+
+        public static IntPtr NULL = (IntPtr)0;
+}
+
+
+Usage:
+
+WinAPI.RedrawWindow(hWnd, WinAPI.NULL, WinAPI.NULL,(UInt32)(WinAPI.RedrawWindowFlags.RDW_FRAME | WinAPI.RedrawWindowFlags.RDW_INVALIDATE | WinAPI.RedrawWindowFlags.RDW_UPDATENOW | WinAPI.RedrawWindowFlags.RDW_ALLCHILDREN));

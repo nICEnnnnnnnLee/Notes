@@ -1,0 +1,19 @@
+http://www.cnblogs.com/Soar1991/archive/2012/03/30/2426115.html
+
+
+Gma.QrCodeNet.Encoding.dll
+
+using System.IO;
+using Gma.QrCodeNet.Encoding;
+using Gma.QrCodeNet.Encoding.Windows.Render;
+
+QrEncoder qrEncoder = new QrEncoder(ErrorCorrectionLevel.H);
+            QrCode qrCode = new QrCode();
+            qrEncoder.TryEncode(this.textBox1.Text, out qrCode);
+
+            FileStream pictureStream =new FileStream(@"QRCode.jpg", FileMode.Create);
+            FixedModuleSize fmSize=new FixedModuleSize(5,QuietZoneModules.Two);
+            GraphicsRenderer pRenderer = new GraphicsRenderer(fmSize, Brushes.Black, Brushes.White);
+            pRenderer.WriteToStream(qrCode.Matrix, System.Drawing.Imaging.ImageFormat.Jpeg, pictureStream);
+            pictureStream.Flush();
+            pictureStream.Close();

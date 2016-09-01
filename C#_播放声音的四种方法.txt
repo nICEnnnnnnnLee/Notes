@@ -1,0 +1,95 @@
+http://www.cnblogs.com/openso2009/archive/2009/09/22/1571606.html
+
+ 介绍之前首先推荐一个程序员专用搜索引擎-http://www.openso.net
+第一种是利用DirectX 
+1.安装了DirectX SDK（有9个DLL文件）。这里我们只用到MicroSoft.DirectX.dll 和 Microsoft.Directx.DirectSound.dll
+2.引入DirectX 的DLL文件的名字空间：
+
+　using Microsoft.DirectX;
+　using Microsoft.DirectX.DirectSound;
+3.建立设备
+Device dv=new Device();
+4.设置CooperativeLevel。因为windows是多任务的系统，设备不是独占的
+SecondaryBuffer buf=new SecondaryBuffer(@"snd.wav",dv);
+5.开辟缓冲区SecondaryBuffer buf=new SecondaryBuffer(@"snd.wav",dv);
+
+6.接下来就可以播放啦。第一个参数表示优先级别，0是最低的。第2个参数是播放方式，这里是循环播放。
+　buf.Play(0,BufferPlayFlags.Looping);
+第二种是利用Microsoft speech object Library
+
+/// <summary
+
+        /// 播放声音文件
+
+        /// </summary>
+
+        /// <param name="FileName">文件全名</param>
+
+        public void PlaySound(string FileName)
+
+        {//要加载COM组件:Microsoft speech object Library
+
+            if (!System.IO.File.Exists(FileName))
+
+            {
+
+                return;
+
+            }
+
+            SpeechLib.SpVoiceClass pp = new SpeechLib.SpVoiceClass();
+
+ 
+
+            SpeechLib.SpFileStreamClass spFs = new SpeechLib.SpFileStreamClass();
+
+ 
+
+            spFs.Open(FileName, SpeechLib.SpeechStreamFileMode.SSFMOpenForRead, true);
+
+            SpeechLib.ISpeechBaseStream Istream = spFs as SpeechLib.ISpeechBaseStream;
+
+            pp.SpeakStream(Istream, SpeechLib.SpeechVoiceSpeakFlags.SVSFIsFilename);
+
+            spFs.Close();
+
+        }
+
+第三种：引用SoundPlayer
+
+System.Media.SoundPlayer sndPlayer = new System.Media.SoundPlayer(Application.StartupPath+@"/pm3.wav");
+
+sndPlayer.PlayLooping();
+
+第4种：利用Windows Media Player
+新建一个C#的Windows Form工程(Windows应用程序)，并且定义两个菜单按钮（menuItem1,menuItem2）。
+  选择菜单中的“工具”中的“自定义工具箱(添加/移除工具箱项)”，在自定义工具箱的窗口中，点击展开“COM 组件”项，选中“Window Media Player”选项。确定后在“工具箱”中便会出现“Windows Media Player”这一项，然后再将其拖至Form上，调整大小，系统在“引用”中自动加入了对此dll的引用，AxMediaPlayer就是我们使用的Namespace与class。
+  在属性栏中设置好此控件的一些属性，为了方便，这里我把AutoStart设置成为true（其实默认是true），只要FileName被设置(打开了文件)，则文件将会自动播放。完整代码如下：
+
+private void menuItem1_Click(object sender, System.EventArgs e)
+{
+OpenFileDialog ofDialog = new OpenFileDialog();
+ofDialog.AddExtension = true;
+ofDialog.CheckFileExists = true;
+ofDialog.CheckPathExists = true;
+
+
+
+//the next sentence must be in single line
+ofDialog.Filter = "VCD文件(*.dat)|*.dat|Audio文件(*.avi)|*.avi
+  |WAV文件(*.wav)|*.wav|MP3文件(*.mp3)|*.mp3|所有文件 (*.*)|*.*";
+
+
+
+ofDialog.DefaultExt = "*.mp3";
+if(ofDialog.ShowDialog() == DialogResult.OK)
+{
+// 2003一下版本 方法 this.axMediaPlayer1.FileName = ofDialog.FileName;
+this.axMediaPlayer1.URL= ofDialog.FileName;//2005用法
+
+}
+}
+
+
+
+  这里使用的是微软的播放器，大家也可以试试Winamp的控件，如果你只需要播放声音而不需要显示，你只要把AxMediaPlayer的Visible属性设置为false就可以了。

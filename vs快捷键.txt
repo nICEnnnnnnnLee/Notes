@@ -1,0 +1,64 @@
+VS2010 常用快捷键
+
+1： Ctrl + Enter （在光标指定位置的上面添加一行，并将光标移至新添加行的行首位置）
+
+　　Ctrl + Shift + Enter （在光标指定位置的下面添加一行，并将光标移至新添加行的行首位置）
+
+2： Ctrl + Shift + L （删除当前行）
+Shift + Del 删除当前行并将内容贴进剪贴板
+
+3： Ctrl + M + O （折叠所有的函数）
+
+　　Ctrl + M + P （展开所有的函数）
+
+4： Ctrl + E + C （注释）　　<=>　　 Ctrl + K + C （注释）
+
+　　Ctrl + E + U （取消注释）　　<=>　　Ctrl + K + U （取消注释）
+
+5： Tab  （增加缩进）
+
+　　Shift + Tab  （减少缩进）
+
+6： Ctrl + .  （调出using菜单；对于没有实现的类可以自动生成）
+
+7： Ctrl + E + S   （查看空白 -- 将空格转换为绿色的点，在查找多余的空格时尤为方便）
+
+8： F12  （转到定义）
+
+　　Ctrl + _  （转到定义后返回）
+
+　　Ctrl + Shift + _  （再次转到定义）
+
+9： Ctrl + Atl + P  （Attach to Process 跟踪调试某个进程）
+
+10:  Ctrl + Shift + 左右方向键  （以单词为单位向左或向右选中代码） 
+
+11:  Ctrl + Tab (切换VS中的不同文件窗口)      
+
+　　  Alt + Tab (切换Windows的不同窗口)
+
+12:  prop + Tab + Tab （创建C#中的属性，之后用Tab进行位置的切换）
+
+13： Ctrl + K + X （Insert Snippet 插入VS定义好的代码模板， 例如 选择其中的Visual C# 之后可以选择好多种不同的模块，例如选择prop name和12的效果是一样的， 还可以选择 try，tryf，using，while 等等，这些可以到VS中实际去看看 ）
+
+14： Ctrl + B + T （标记当前行）
+
+　　  Ctrl + B + P （将光标移动到前一个标记行）
+
+　　  Ctrl + B + N（将光标移动到后一个标记行）
+
+　　  Ctrl + B + C （移除所有的标记行）
+
+　　  Ctrl + W + B （列出所有的标记行，即：打开一个新的窗口，若想打开更多的小窗口请点击VIEW）
+
+【注：标记行可以标记我们所关注的代码段，从而实现不同代码段的切换，例如我想比较两端代码段的异同，或者参照某段代码实现新的功能。当然也肯定不会忘 Ctrl + A， Ctrl + C， Ctrl + V， Ctrl + X， Ctrl + Z， Ctrl + S】
+
+15： F7 （从Designer界面切换到后天代码） 
+
+　　  Shift + F7 （从后台代码切换到前台Designer页面）（例如在Asp.Net程序中使用）
+
+16：Ctrl + E + D （对当前页VS中的代码块进行格式化） ，选中VS中的代码 然后 Ctrl + E + F （对选中的代码段进行格式化）
+
+ 
+
+未完待续中。。。。。 

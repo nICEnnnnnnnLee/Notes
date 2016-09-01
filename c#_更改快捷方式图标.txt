@@ -1,0 +1,20 @@
+http://www.cnblogs.com/yeaicc/archive/2012/05/12/operateshortcut.html
+
+选择“COM组件”，找到“Windows Script Host Object Model”，然后确定。
+
+ 1 // 声明操作对象
+ 2 IWshRuntimeLibrary.WshShell shell = new IWshRuntimeLibrary.WshShellClass();
+ 3 // 创建一个快捷方式
+ 4 IWshRuntimeLibrary.IWshShortcut shortcut = (IWshRuntimeLibrary.IWshShortcut)shell.CreateShortcut("c:\\yeaicc.lnk");
+ 5 // 关联的程序
+ 6 shortcut.TargetPath = "notepad.exe";
+ 7 // 参数
+ 8 shortcut.Arguments = "c:\\yeaicc.txt";
+ 9 // 快捷方式描述，鼠标放到快捷方式上会显示出来哦
+10 shortcut.Description = "我的快捷方式--yeaicc";
+11 // 全局热键
+12 shortcut.Hotkey = "CTRL+SHIFT+N";
+13 // 设置快捷方式的图标，这里是取程序图标，如果希望指定一个ico文件，那么请写路径。
+14 shortcut.IconLocation = "notepad.exe, 0";
+15 // 保存，创建就成功了。
+16 shortcut.Save();

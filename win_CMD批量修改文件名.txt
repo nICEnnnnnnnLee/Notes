@@ -1,0 +1,10 @@
+都是这种形式的命名：aaa65464.jpg,aaa785785785.jpg,aaa785785.jpg,aaa78785275.jpg,aaa3453425.jpg。非常多这样的文件。我现在想批量把aaa这3个字母去掉。保留后面的数字。
+CMD命令批量操作
+
+@echo off
+for /f "delims=" %%a in ('dir /b/s/a-d aaa*.jpg') do (
+    set "str=%%~nxa"
+    setlocal enabledelayedexpansion
+    ren "%%a" "!str:~3!"
+    endlocal
+)
